@@ -49,7 +49,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0">
 
         <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 shrink-0">
-          <div className="text-xl font-bold text-[#0F172A]">Community Connect</div>
+          <Link href="/Dashboard" className="text-xl font-bold text-[#0F172A]">Community Connect</Link>
 
           <div className="flex items-center space-x-6 text-sm font-medium text-slate-600">
             <Link href="/reportissue" className="hover:text-slate-900 transition">

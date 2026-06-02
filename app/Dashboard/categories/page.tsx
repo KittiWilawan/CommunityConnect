@@ -98,8 +98,8 @@ export default function CategoriesPage() {
             <div
               key={service.id}
               className={`bg-white rounded-2xl border shadow-sm p-4 transition-all duration-300 ${service.enabled
-                  ? "border-slate-200"
-                  : "border-slate-100 opacity-60"
+                ? "border-slate-200"
+                : "border-slate-100 opacity-60"
                 }`}
             >
               <div className="flex items-center justify-between">
@@ -149,10 +149,10 @@ export default function CategoriesPage() {
                       <button
                         onClick={() => deleteCategory(service.id)}
                         disabled={isDeleting}
-                        className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition disabled:opacity-50"
+                        className="px-3 py-1.5 rounded-lg border border-red-500 bg-transparent text-red-600 text-xs font-bold hover:bg-red-600 hover:text-white transition disabled:opacity-50"
                       >
                         {isDeleting ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <Loader2 className="w-3 h-3 animate-spin " />
                         ) : (
                           "ยืนยัน"
                         )}
