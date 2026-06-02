@@ -14,6 +14,7 @@ export default function AddStaffPage() {
                     <button type="submit">Add Staff</button>
                 </form>
 
+
             </div>
         </div>
     );

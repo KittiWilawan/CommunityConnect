@@ -15,6 +15,33 @@ export default function StaffRosterPage() {
       category: 'Electricians',
       status: 'AVAILABLE',
       image: '',
+    },
+    {
+      id: 2,
+      name: 'Joe Dohn',
+      role: 'Senior Plumbing',
+      thaiRole: 'ช่างประปาอาวุโส',
+      category: 'Plumbing',
+      status: 'AVAILABLE',
+      image: '',
+    },
+    {
+      id: 3,
+      name: 'Som John',
+      role: 'Senior Civil',
+      thaiRole: 'ช่างประปาอาวุโส',
+      category: 'Civil',
+      status: 'AVAILABLE',
+      image: '',
+    },
+    {
+      id: 4,
+      name: 'Joe John',
+      role: 'Senior Electrician',
+      thaiRole: 'ช่างไฟฟ้าอาวุโส',
+      category: 'Electricians',
+      status: 'UNAVAILABLE',
+      image: '',
     }
   ];
 
@@ -54,7 +81,7 @@ export default function StaffRosterPage() {
         <div className="bg-[#E8F0FE] rounded-2xl p-5 border border-blue-100 shadow-sm relative overflow-hidden">
           <CalendarDays className="w-5 h-5 text-blue-600 absolute top-5 left-5" />
           <div className="pt-6">
-            <span className="text-4xl font-bold text-blue-600">1</span>
+            <span className="text-4xl font-bold text-blue-600">3</span>
             <p className="text-sm font-bold text-slate-700 mt-1">Available</p>
             <p className="text-[11px] text-slate-500 font-medium">พร้อมทำงาน</p>
           </div>

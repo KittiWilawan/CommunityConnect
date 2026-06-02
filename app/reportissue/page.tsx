@@ -284,7 +284,6 @@ function ReportIssueForm() {
                             />
                         </div>
 
-                        {/* Submit Button */}
                         <div className="pt-2">
                             <button
                                 type="submit"
