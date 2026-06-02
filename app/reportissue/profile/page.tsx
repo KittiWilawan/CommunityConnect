@@ -41,7 +41,7 @@ export default function ProfilePage() {
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
 
-          <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition text-left group">
+          <a href='/reportissue/profile/edit' className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition text-left group">
             <div className="flex items-center space-x-4">
               <div className="p-2 bg-slate-50 rounded-xl text-slate-700 group-hover:bg-white border border-transparent group-hover:border-slate-100 transition">
                 <User className="w-5 h-5" />
@@ -53,7 +53,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          </a>
 
           <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition text-left group">
             <div className="flex items-center space-x-4">
