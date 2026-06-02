@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
-import { UserCheck, CalendarDays, Contact, PhoneCall } from 'lucide-react';
+import { UserCheck, CalendarDays, Contact, PhoneCall, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function StaffRosterPage() {
   const [activeTab, setActiveTab] = useState('All Staff');
   const staffList = [
     {
       id: 1,
-      name: 'Robert Chen',
+      name: 'John Doe',
       role: 'Senior Electrician',
       thaiRole: 'ช่างไฟฟ้าอาวุโส',
       category: 'Electricians',
@@ -27,6 +28,18 @@ export default function StaffRosterPage() {
         <h1 className="text-2xl font-bold text-[#0F172A] mt-0.5">Staff Roster</h1>
         <p className="text-xs font-medium text-slate-500 mt-0.5">บัญชีรายชื่อเจ้าหน้าที่</p>
       </div>
+      <Link
+        href="/Dashboard/management/addstaff"
+        className="w-full bg-[#0F172A] hover:bg-slate-800 text-white font-bold text-sm py-4 rounded-xl transition duration-200 flex items-center justify-center space-x-2 shadow-md active:scale-[0.99]"
+      >
+        <PlusCircle className="w-5 h-5" />
+        <div className="text-left">
+          <p className="font-bold text-sm leading-none">Add New Staff</p>
+          <p className="text-[10px] font-normal text-slate-300 mt-1 leading-none">
+            เพิ่มเจ้าหน้าที่
+          </p>
+        </div>
+      </Link>
 
       <div className="grid grid-cols-2 gap-4 space-y-2  ">
         <div className="bg-[#DCE4EC] rounded-2xl p-5 border border-slate-200/60 shadow-sm relative overflow-hidden">

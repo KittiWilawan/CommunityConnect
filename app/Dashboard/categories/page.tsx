@@ -52,7 +52,7 @@ export default function CategoriesPage() {
     }
   };
 
-  // Delete category
+  // Delete category 💣
   const deleteCategory = async (id: string) => {
     setDeletingId(id);
     try {

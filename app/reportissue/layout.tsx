@@ -36,7 +36,9 @@ export default function DashboardLayout({
             <Link href="/reportissue/profile" className="hover:text-slate-900 transition">Profile</Link>
 
             <button className="relative p-1 text-slate-400 hover:text-slate-600 transition">
-              <Bell className="w-6 h-6" />
+              <Link href="/Dashboard/notification">
+                <Bell className="w-6 h-6" />
+              </Link>
             </button>
           </div>
         </header>

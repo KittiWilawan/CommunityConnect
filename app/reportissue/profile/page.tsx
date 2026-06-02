@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useState } from 'react';
-import { 
-  User, 
-  CheckCircle2, 
-  Globe, 
-  ChevronRight, 
-  Type, 
-  Contrast, 
-  HelpCircle, 
-  MessageSquare, 
-  Shield, 
-  LogOut 
+import {
+  User,
+  CheckCircle2,
+  Globe,
+  ChevronRight,
+  Type,
+  Contrast,
+  HelpCircle,
+  MessageSquare,
+  Shield,
+  LogOut
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -20,7 +20,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-12">
-      
+
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col items-center text-center relative overflow-hidden">
         <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center relative mb-4">
           <User className="w-12 h-12 text-slate-600" />
@@ -28,8 +28,8 @@ export default function ProfilePage() {
             <CheckCircle2 className="w-5 h-5 text-sky-600 fill-white" />
           </div>
         </div>
-        
-        <h2 className="text-xl font-bold text-slate-800">กิตติ วิลาวรรณ</h2>
+
+        <h2 className="text-xl font-bold text-slate-800">John </h2>
         <p className="text-xs font-bold text-sky-600 uppercase tracking-wider mt-1">Verified Resident</p>
         <p className="text-[11px] text-slate-400 mt-1 font-mono">citizen_id: 1-1234-56XXX-X-X</p>
       </div>
@@ -38,13 +38,15 @@ export default function ProfilePage() {
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
           บัญชีและการตั้งค่า (ACCOUNT SETTINGS)
         </h3>
-        
+
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
+
           <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition text-left group">
             <div className="flex items-center space-x-4">
               <div className="p-2 bg-slate-50 rounded-xl text-slate-700 group-hover:bg-white border border-transparent group-hover:border-slate-100 transition">
                 <User className="w-5 h-5" />
               </div>
+
               <div>
                 <p className="text-sm font-semibold text-slate-800">แก้ไขข้อมูลส่วนตัว</p>
                 <p className="text-[11px] text-slate-400">Edit Profile</p>
@@ -72,7 +74,7 @@ export default function ProfilePage() {
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
           การเข้าถึงที่สะดวก (ACCESSIBILITY)
         </h3>
-        
+
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-4">
@@ -85,11 +87,11 @@ export default function ProfilePage() {
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={largeText}
                 onChange={() => setLargeText(!largeText)}
-                className="sr-only peer" 
+                className="sr-only peer"
               />
               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 Tactics after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
             </label>
@@ -106,11 +108,11 @@ export default function ProfilePage() {
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={highContrast}
                 onChange={() => setHighContrast(!highContrast)}
-                className="sr-only peer" 
+                className="sr-only peer"
               />
               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-600"></div>
             </label>
@@ -122,7 +124,7 @@ export default function ProfilePage() {
         <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
           ความช่วยเหลือและกฎหมาย (SUPPORT & LEGAL)
         </h3>
-        
+
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
           <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition text-left group">
             <div className="flex items-center space-x-4">
