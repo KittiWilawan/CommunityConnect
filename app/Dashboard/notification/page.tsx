@@ -172,11 +172,10 @@ export default function NotificationPage() {
             <div
               key={notif.id}
               onClick={() => !notif.read && handleMarkAsRead(notif.id)}
-              className={`p-4 rounded-2xl border transition flex gap-4 relative group ${
-                notif.read
+              className={`p-4 rounded-2xl border transition flex gap-4 relative group ${notif.read
                   ? "bg-white border-slate-200 text-slate-700"
                   : "bg-blue-50/60 border-blue-100 text-slate-800 shadow-sm"
-              }`}
+                }`}
             >
               {/* Status dot */}
               {!notif.read && (
