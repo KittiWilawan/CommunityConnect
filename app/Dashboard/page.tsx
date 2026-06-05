@@ -39,7 +39,9 @@ export default function DashboardPage() {
       }
       const data = await res.json();
       if (Array.isArray(data)) {
-        setCategories(data);
+        // Filter to ensure only enabled categories are shown
+        const enabledCategories = data.filter((cat: any) => cat.enabled !== false);
+        setCategories(enabledCategories);
       } else {
         console.error("Categories data is not an array:", data);
         setCategories([]);
@@ -62,6 +64,7 @@ export default function DashboardPage() {
       } = await supabase.auth.getUser();
 
       if (authError || !user) {
+        console.log("User not authenticated, skipping report fetch");
         setLoadingReports(false);
         return;
       }
@@ -76,6 +79,7 @@ export default function DashboardPage() {
       if (fetchError) {
         console.error("Failed to load reports:", fetchError.message);
         setRecentReports([]);
+        setLoadingReports(false);
         return;
       }
 
@@ -93,10 +97,10 @@ export default function DashboardPage() {
       }));
 
       setRecentReports(formatted);
+      setLoadingReports(false);
     } catch (err) {
       console.error("Failed to load reports from database:", err);
       setRecentReports([]);
-    } finally {
       setLoadingReports(false);
     }
   }, []);
@@ -104,7 +108,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchCategories();
     fetchRecentReports();
-  }, [fetchCategories, fetchRecentReports]);
+  }, []);
 
   const handleSelectCategory = (id: string) => {
     router.push(`/reportissue?category=${id}`);
@@ -139,6 +143,16 @@ export default function DashboardPage() {
     viewAll: language === "th" ? "ดูทั้งหมด" : "View All",
     noReports: language === "th" ? "ยังไม่มีรายงาน" : "No reports yet",
   };
+
+  // Debug: log the current state
+  useEffect(() => {
+    console.log("Dashboard state:", {
+      loading,
+      categoriesCount: categories.length,
+      loadingReports,
+      recentReportsCount: recentReports.length,
+    });
+  }, [loading, categories, loadingReports, recentReports]);
 
   return (
     <div className="space-y-8">
@@ -267,7 +281,7 @@ export default function DashboardPage() {
                   </p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
                     <Calendar className="w-3 h-3" />
-                    <span>{report.timestamp.split(" ")[0]}</span>
+                    <span>{report.timestamp ? report.timestamp.split(" ")[0] : "N/A"}</span>
                   </div>
                 </div>
               ))}
