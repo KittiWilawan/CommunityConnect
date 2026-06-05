@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -47,7 +47,11 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
-    return NextResponse.redirect(url);
+    // Clear any potentially stale session cookies
+    const response = NextResponse.redirect(url);
+    response.cookies.delete("sb-access-token");
+    response.cookies.delete("sb-refresh-token");
+    return response;
   }
 
   // Role-based protection when logged in
@@ -79,6 +83,10 @@ export async function proxy(request: NextRequest) {
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone();
     url.pathname = role === "admin" ? "/admindashboard" : "/Dashboard";
+    // Avoid redirecting if we are already where we need to be
+    if (pathname === url.pathname) {
+      return response;
+    }
     return NextResponse.redirect(url);
   }
 

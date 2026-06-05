@@ -24,7 +24,14 @@ export default function DashboardLayout({
     const supabase = createClient();
 
     const fetchUserAndNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error || !user) {
+        console.log("No user found in Dashboard Layout, but let Middleware handle redirect");
+        setAuthChecked(true);
+        return;
+      }
+
       setUser(user);
 
       if (user) {
@@ -79,8 +86,12 @@ export default function DashboardLayout({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change in Dashboard Layout:", event);
       setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
+        router.push("/");
+      }
     });
 
     return () => {

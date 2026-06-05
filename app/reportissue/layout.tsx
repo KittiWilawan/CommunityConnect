@@ -31,8 +31,8 @@ export default function DashboardLayout({
         } = await supabase.auth.getUser();
 
         if (authError || !user) {
-          // Not authenticated — redirect to login
-          router.push("/");
+          console.log("No user found in ReportIssue Layout, but let Middleware handle redirect");
+          setAuthChecked(true);
           return;
         }
 
@@ -83,11 +83,11 @@ export default function DashboardLayout({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change in ReportIssue Layout:", event);
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
         router.push("/");
-      } else {
-        setUser(session.user);
       }
     });
 
