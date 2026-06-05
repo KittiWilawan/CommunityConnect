@@ -98,11 +98,23 @@ export default function DashboardLayout({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Add debug logging
+  useEffect(() => {
+    console.log("ReportIssue Layout state:", { authChecked, user: user?.email, profile: profile?.display_name });
+  }, [authChecked, user, profile]);
+
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      // Wait a moment for the sign out to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      console.error("Sign out error:", err);
+      router.push("/");
+    }
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -245,7 +257,10 @@ export default function DashboardLayout({
                   {profile?.display_name || user.email?.split("@")[0]}
                 </span>
                 <button
-                  onClick={handleSignOut}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSignOut();
+                  }}
                   className="flex items-center space-x-1 text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition duration-200 cursor-pointer font-semibold"
                 >
                   <LogOut className="w-4 h-4" />

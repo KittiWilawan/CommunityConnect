@@ -101,10 +101,17 @@ export default function DashboardLayout({
         return baseClass + (darkMode ? "text-slate-300 hover:bg-slate-700 hover:text-white" : "text-slate-600 hover:bg-slate-200 hover:text-slate-900");
     };
     const handleSignOut = async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        router.push("/");
-        router.refresh();
+        try {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            // Wait a moment for the sign out to complete
+            await new Promise(resolve => setTimeout(resolve, 500));
+            router.push("/");
+            router.refresh();
+        } catch (err) {
+            console.error("Sign out error:", err);
+            router.push("/");
+        }
     };
 
     const BellWithBadge = () => (
@@ -301,13 +308,16 @@ export default function DashboardLayout({
                                 >
                                     {profile?.display_name || user.email?.split("@")[0]}
                                 </span>
-                                <button
-                                    onClick={handleSignOut}
-                                    className="flex items-center space-x-1 text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition duration-200 cursor-pointer font-semibold"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    <span>{tNav.logout}</span>
-                                </button>
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        handleSignOut();
+                    }}
+                    className="flex items-center space-x-1 text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition duration-200 cursor-pointer font-semibold"
+                >
+                    <LogOut className="w-4 h-4" />
+                    <span>{tNav.logout}</span>
+                </button>
                             </div>
                         )}
                     </div>

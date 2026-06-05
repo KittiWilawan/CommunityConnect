@@ -18,6 +18,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -52,6 +53,7 @@ export default function DashboardLayout({
     };
 
     fetchUserAndNotifications();
+    setAuthChecked(true);
 
     // Poll for new notifications every 30 seconds
     const interval = setInterval(async () => {
@@ -85,16 +87,29 @@ export default function DashboardLayout({
       subscription.unsubscribe();
       clearInterval(interval);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      // Wait a moment for the sign out to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      console.error("Sign out error:", err);
+      router.push("/");
+    }
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Add debug logging
+  useEffect(() => {
+    console.log("Dashboard Layout state:", { authChecked, user: user?.email, profile: profile?.display_name });
+  }, [authChecked, user, profile]);
 
   const BellWithBadge = () => (
     <Link href="/Dashboard/notification" className={`relative p-2 rounded-xl transition cursor-pointer ${darkMode ? 'text-slate-300 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}>
@@ -106,6 +121,10 @@ export default function DashboardLayout({
       )}
     </Link>
   );
+
+  useEffect(() => {
+    console.log("BellWithBadge rendered with unreadCount:", unreadCount);
+  }, [unreadCount]);
 
   const ProfileAvatar = ({ size = "w-8 h-8", textSize = "text-xs" }: { size?: string; textSize?: string }) => (
     <Link href="/reportissue/profile" className="group">
@@ -131,6 +150,15 @@ export default function DashboardLayout({
     profile: language === 'th' ? 'โปรไฟล์' : 'Profile',
     logout: language === 'th' ? 'ออกจากระบบ' : 'Logout',
   };
+
+  // Show loading spinner while auth is being checked
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen flex flex-col font-sans relative transition-colors duration-300 ${darkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
@@ -170,7 +198,10 @@ export default function DashboardLayout({
                   {profile?.display_name || user.email?.split("@")[0]}
                 </span>
                 <button
-                  onClick={handleSignOut}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSignOut();
+                  }}
                   className="flex items-center space-x-1 text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition duration-200 cursor-pointer font-semibold"
                 >
                   <LogOut className="w-4 h-4" />
