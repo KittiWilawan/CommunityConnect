@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   Clock,
@@ -32,31 +33,43 @@ interface Report {
 
 export default function HistoryPage() {
   const { language } = useSettings();
+  const router = useRouter();
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   // Load reports from Supabase
   useEffect(() => {
     const fetchReports = async () => {
       try {
         const supabase = createClient();
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
+
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+          // Not logged in — redirect to login
+          router.push("/");
           return;
         }
 
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
           .from("reports")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Failed to load reports:", error.message);
+        if (fetchError) {
+          console.error("Failed to load reports:", fetchError.message);
+          setError(
+            language === "th"
+              ? "ไม่สามารถโหลดประวัติได้: " + fetchError.message
+              : "Failed to load history: " + fetchError.message
+          );
           return;
         }
 
@@ -77,42 +90,76 @@ export default function HistoryPage() {
         setReports(formatted);
       } catch (err) {
         console.error("Failed to load reports from database:", err);
+        setError(
+          language === "th"
+            ? "เกิดข้อผิดพลาดในการโหลดข้อมูล"
+            : "An error occurred while loading data"
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchReports();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const t = {
-    confirmDelete: language === "th" ? "คุณต้องการลบประวัติการแจ้งเหตุนี้ใช่หรือไม่?" : "Are you sure you want to delete this report from history?",
-    deleteError: language === "th" ? "ไม่สามารถลบข้อมูลได้: " : "Failed to delete: ",
-    deleteErrorCatch: language === "th" ? "เกิดข้อผิดพลาดในการลบประวัติ" : "Error deleting history",
-    headerTitle: language === "th" ? "ประวัติการแจ้งเหตุของคุณ" : "Your Reported Issues History",
-    headerSubtitle: language === "th" ? "ประวัติการแจ้งเหตุของคุณ" : "My Reported Issues History",
-    searchPlaceholder: language === "th" ? "ค้นหาประวัติการแจ้งเหตุ..." : "Search history...",
+    confirmDelete:
+      language === "th"
+        ? "คุณต้องการลบประวัติการแจ้งเหตุนี้ใช่หรือไม่?"
+        : "Are you sure you want to delete this report from history?",
+    deleteError:
+      language === "th" ? "ไม่สามารถลบข้อมูลได้: " : "Failed to delete: ",
+    deleteErrorCatch:
+      language === "th"
+        ? "เกิดข้อผิดพลาดในการลบประวัติ"
+        : "Error deleting history",
+    headerTitle:
+      language === "th"
+        ? "ประวัติการแจ้งเหตุของคุณ"
+        : "Your Reported Issues History",
+    headerSubtitle:
+      language === "th"
+        ? "ประวัติการแจ้งเหตุของคุณ"
+        : "My Reported Issues History",
+    searchPlaceholder:
+      language === "th" ? "ค้นหาประวัติการแจ้งเหตุ..." : "Search history...",
     backBtn: language === "th" ? "กลับหน้าหลัก" : "Back to Home",
     reportNewBtn: language === "th" ? "แจ้งเรื่องใหม่" : "Report New Issue",
     noImage: language === "th" ? "ไม่มีรูปภาพแนบ" : "No image attached",
     contactPrefix: language === "th" ? "ติดต่อ: " : "Contact: ",
-    deleteTooltip: language === "th" ? "ลบออกจากประวัติ" : "Delete from history",
-    emptyTitle: language === "th" ? "ยังไม่มีประวัติการแจ้งเหตุ" : "No history yet",
-    emptyDesc: language === "th" ? "คุณยังไม่ได้สร้างรายงานแจ้งปัญหาการใช้งานสาธารณูปโภคใดๆ คุณสามารถเริ่มทำรายงานได้ง่ายๆ ตอนนี้" : "You haven't submitted any utility issue reports yet. You can submit one easily now.",
-    emptyReportBtn: language === "th" ? "แจ้งรายงานปัญหาแรก" : "Report First Issue",
-    noResults: language === "th" ? "ไม่พบประวัติการแจ้งเหตุที่ตรงกับ" : "No history found matching",
+    deleteTooltip:
+      language === "th" ? "ลบออกจากประวัติ" : "Delete from history",
+    emptyTitle:
+      language === "th"
+        ? "ยังไม่มีประวัติการแจ้งเหตุ"
+        : "No history yet",
+    emptyDesc:
+      language === "th"
+        ? "คุณยังไม่ได้สร้างรายงานแจ้งปัญหาการใช้งานสาธารณูปโภคใดๆ คุณสามารถเริ่มทำรายงานได้ง่ายๆ ตอนนี้"
+        : "You haven't submitted any utility issue reports yet. You can submit one easily now.",
+    emptyReportBtn:
+      language === "th" ? "แจ้งรายงานปัญหาแรก" : "Report First Issue",
+    noResults:
+      language === "th"
+        ? "ไม่พบประวัติการแจ้งเหตุที่ตรงกับ"
+        : "No history found matching",
   };
 
   const handleDeleteReport = async (id: string) => {
     if (confirm(t.confirmDelete)) {
       try {
         const supabase = createClient();
-        const { error } = await supabase.from("reports").delete().eq("id", id);
-        if (error) {
-          alert(t.deleteError + error.message);
+        const { error: deleteError } = await supabase
+          .from("reports")
+          .delete()
+          .eq("id", id);
+        if (deleteError) {
+          alert(t.deleteError + deleteError.message);
           return;
         }
-        setReports(reports.filter((r) => r.id !== id));
+        setReports((prev) => prev.filter((r) => r.id !== id));
       } catch (err: any) {
         alert(t.deleteErrorCatch);
       }
@@ -139,6 +186,22 @@ export default function HistoryPage() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-3 text-center px-4">
+        <AlertCircle className="w-10 h-10 text-red-400" />
+        <p className="text-slate-600 text-sm font-medium">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-blue-500 text-xs underline cursor-pointer"
+        >
+          {language === "th" ? "ลองใหม่" : "Try again"}
+        </button>
+      </div>
+    );
+  }
+
   const filteredReports = reports.filter((report) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -276,7 +339,10 @@ export default function HistoryPage() {
                     {report.contact && (
                       <div className="flex items-center space-x-1 text-slate-500">
                         <FileText className="w-3.5 h-3.5" />
-                        <span>{t.contactPrefix}{report.contact}</span>
+                        <span>
+                          {t.contactPrefix}
+                          {report.contact}
+                        </span>
                       </div>
                     )}
                   </div>

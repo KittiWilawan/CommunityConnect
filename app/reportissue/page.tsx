@@ -15,12 +15,37 @@ import type { Category } from "@/app/lib/types";
 import { createClient } from "@/app/lib/supabase";
 import { useSettings } from "@/app/components/SettingsProvider";
 
+// Compress image to JPEG at reduced quality/size to stay within Supabase row limits
+function compressImage(dataUrl: string, maxWidth = 800, quality = 0.7): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      } else {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 function ReportIssueForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { language } = useSettings();
   const categoryParam = searchParams.get("category");
-
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,9 +95,17 @@ function ReportIssueForm() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file size (max 5MB before compression)
+      if (file.size > 5 * 1024 * 1024) {
+        alert(language === "th" ? "ไฟล์รูปภาพต้องมีขนาดไม่เกิน 5MB" : "Image file must be under 5MB");
+        return;
+      }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
+      reader.onloadend = async () => {
+        const raw = reader.result as string;
+        // Compress image before storing
+        const compressed = await compressImage(raw, 800, 0.7);
+        setSelectedImage(compressed);
       };
       reader.readAsDataURL(file);
     }
@@ -93,10 +126,10 @@ function ReportIssueForm() {
     loginFirst: language === "th" ? "กรุณาเข้าสู่ระบบก่อนทำรายการ" : "Please log in before making a report",
     saveError: language === "th" ? "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " : "Failed to save report: ",
     newReportTitle: language === "th" ? "มีรายการแจ้งเหตุใหม่ 📢" : "New Incident Report 📢",
-    newReportContent: (sub: string, contact: string, desc: string) =>
+    newReportContent: (sub: string, contactInfo: string, desc: string) =>
       language === "th"
-        ? `หัวข้อ: ${sub}\nผู้แจ้ง: ${contact || "ไม่ระบุชื่อ"}\nรายละเอียด: ${desc.slice(0, 60)}...`
-        : `Topic: ${sub}\nReporter: ${contact || "Anonymous"}\nDetails: ${desc.slice(0, 60)}...`,
+        ? `หัวข้อ: ${sub}\nผู้แจ้ง: ${contactInfo || "ไม่ระบุชื่อ"}\nรายละเอียด: ${desc.slice(0, 60)}...`
+        : `Topic: ${sub}\nReporter: ${contactInfo || "Anonymous"}\nDetails: ${desc.slice(0, 60)}...`,
     generalSaveError: language === "th" ? "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง" : "Could not save report. Please try again.",
     loadingCategories: language === "th" ? "กำลังโหลดข้อมูลหมวดหมู่..." : "Loading categories...",
     headerTitle: language === "th" ? "รายงานปัญหาชุมชน" : "Report Community Issue",
@@ -139,27 +172,42 @@ function ReportIssueForm() {
       const supabase = createClient();
       const {
         data: { user },
+        error: authError,
       } = await supabase.auth.getUser();
 
-      if (!user) {
+      if (authError || !user) {
         alert(t.loginFirst);
         setSaving(false);
         return;
       }
 
-      const { data: reportData, error: insertError } = await supabase.from("reports").insert({
-        user_id: user.id,
-        category_id: selectedCategoryId,
-        category_title: currentCategory
-          ? `${currentCategory.subtitle} (${currentCategory.title})`
-          : "หมวดหมู่อื่นๆ",
-        category_color: currentCategory?.color || "#64748B",
-        subcategory: selectedSubcategory,
-        description: description.trim(),
-        contact: contact.trim(),
-        image: selectedImage, // base64 data URL
-        status: "รอดำเนินการ",
-      }).select("id").single();
+      // Prepare image: if present, compress further to ensure it fits in the DB row
+      let imageToStore: string | null = null;
+      if (selectedImage) {
+        try {
+          imageToStore = await compressImage(selectedImage, 600, 0.6);
+        } catch {
+          imageToStore = selectedImage;
+        }
+      }
+
+      const { data: reportData, error: insertError } = await supabase
+        .from("reports")
+        .insert({
+          user_id: user.id,
+          category_id: selectedCategoryId,
+          category_title: currentCategory
+            ? `${currentCategory.subtitle} (${currentCategory.title})`
+            : "หมวดหมู่อื่นๆ",
+          category_color: currentCategory?.color || "#64748B",
+          subcategory: selectedSubcategory,
+          description: description.trim(),
+          contact: contact.trim(),
+          image: imageToStore,
+          status: "รอดำเนินการ",
+        })
+        .select("id")
+        .single();
 
       if (insertError) {
         console.error("Error inserting report:", insertError);
@@ -168,7 +216,7 @@ function ReportIssueForm() {
         return;
       }
 
-      // Create notification for admins
+      // Create notification for admins — non-blocking, errors are swallowed
       if (reportData) {
         try {
           const { data: admins } = await supabase
@@ -180,14 +228,18 @@ function ReportIssueForm() {
             const adminNotifs = admins.map((admin: any) => ({
               user_id: admin.id,
               title: t.newReportTitle,
-              content: t.newReportContent(selectedSubcategory, contact.trim(), description.trim()),
+              content: t.newReportContent(
+                selectedSubcategory,
+                contact.trim(),
+                description.trim()
+              ),
               report_id: reportData.id,
               read: false,
             }));
-
             await supabase.from("notifications").insert(adminNotifs);
           }
         } catch (err) {
+          // Notification failure should not block the report submission
           console.error("Failed to insert admin notifications:", err);
         }
       }

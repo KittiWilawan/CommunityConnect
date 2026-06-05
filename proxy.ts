@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -53,7 +53,10 @@ export async function middleware(request: NextRequest) {
   // Role-based protection when logged in
   if (user) {
     // Admins are redirected to /admindashboard if visiting normal user dashboard or root
-    if (role === "admin" && (pathname === "/" || pathname.startsWith("/Dashboard"))) {
+    if (
+      role === "admin" &&
+      (pathname === "/" || pathname.startsWith("/Dashboard"))
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/admindashboard";
       return NextResponse.redirect(url);
