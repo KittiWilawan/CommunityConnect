@@ -17,10 +17,19 @@ export default function DashboardPage() {
   const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch("/api/categories?enabled=true");
+      if (!res.ok) {
+        throw new Error(`Failed to fetch categories: ${res.statusText}`);
+      }
       const data = await res.json();
-      setCategories(data);
+      if (Array.isArray(data)) {
+        setCategories(data);
+      } else {
+        console.error("Categories data is not an array:", data);
+        setCategories([]);
+      }
     } catch (err) {
       console.error("Failed to fetch categories:", err);
+      setCategories([]);
     } finally {
       setLoading(false);
     }

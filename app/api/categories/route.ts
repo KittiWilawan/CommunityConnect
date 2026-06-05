@@ -11,18 +11,24 @@ export async function GET(request: NextRequest) {
     query = query.eq("enabled", true);
   }
 
-  const { data, error } = await query;
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+  try {
+    const { data, error } = await query;
+    if (error) {
+      console.error("Supabase error fetching categories:", error);
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+
+    // Format icon_name -> iconName for the frontend
+    const formatted = (data || []).map((cat: any) => ({
+      ...cat,
+      iconName: cat.icon_name,
+    }));
+
+    return Response.json(formatted);
+  } catch (err: any) {
+    console.error("Internal server error in categories API:", err);
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
-
-  // Format icon_name -> iconName for the frontend
-  const formatted = (data || []).map((cat: any) => ({
-    ...cat,
-    iconName: cat.icon_name,
-  }));
-
-  return Response.json(formatted);
 }
 
 // POST — add a new category

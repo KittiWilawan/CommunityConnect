@@ -47,6 +47,14 @@ export default function DashboardPage() {
   const fetchReports = useCallback(async () => {
     try {
       const supabase = createClient();
+      
+      // Ensure we are logged in before fetching
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error("No user found, cannot fetch reports");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("reports")
         .select("*")

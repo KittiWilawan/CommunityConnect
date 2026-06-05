@@ -162,6 +162,7 @@ function ReportIssueForm() {
       }).select("id").single();
 
       if (insertError) {
+        console.error("Error inserting report:", insertError);
         alert(t.saveError + insertError.message);
         setSaving(false);
         return;

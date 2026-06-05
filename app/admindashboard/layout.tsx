@@ -29,20 +29,31 @@ export default function DashboardLayout({
 
             if (user) {
                 // Fetch profile for avatar
-                const { data: profileData } = await supabase
+                const { data: profileData, error: profileError } = await supabase
                     .from("profiles")
                     .select("*")
                     .eq("id", user.id)
                     .single();
-                setProfile(profileData);
+                
+                if (profileError) {
+                    console.error("Error fetching profile:", profileError);
+                } else {
+                    setProfile(profileData);
+                }
 
                 // Fetch unread notification count
-                const { count } = await supabase
+                const { count, error: notifError } = await supabase
                     .from("notifications")
                     .select("*", { count: "exact", head: true })
                     .eq("user_id", user.id)
                     .eq("read", false);
-                setUnreadCount(count || 0);
+                
+                if (notifError) {
+                    console.error("Error fetching notifications:", notifError);
+                    setUnreadCount(0);
+                } else {
+                    setUnreadCount(count || 0);
+                }
             }
         };
 
@@ -50,14 +61,23 @@ export default function DashboardLayout({
 
         // Poll for new notifications every 30 seconds
         const interval = setInterval(async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { count } = await supabase
-                    .from("notifications")
-                    .select("*", { count: "exact", head: true })
-                    .eq("user_id", user.id)
-                    .eq("read", false);
-                setUnreadCount(count || 0);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { count, error: pollError } = await supabase
+                        .from("notifications")
+                        .select("*", { count: "exact", head: true })
+                        .eq("user_id", user.id)
+                        .eq("read", false);
+                    
+                    if (pollError) {
+                        console.error("Error polling notifications:", pollError);
+                    } else {
+                        setUnreadCount(count || 0);
+                    }
+                }
+            } catch (err) {
+                console.error("Polling interval error:", err);
             }
         }, 30000);
 
