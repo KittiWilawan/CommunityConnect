@@ -65,13 +65,15 @@ function ReportIssueForm() {
         const res = await fetch("/api/categories?enabled=true");
         if (res.ok) {
           const data = await res.json();
-          setCategories(data);
+          if (Array.isArray(data)) {
+            setCategories(data);
 
-          // Pre-select category if parameter is valid
-          if (categoryParam) {
-            const found = data.find((c: Category) => c.id === categoryParam);
-            if (found) {
-              setSelectedCategoryId(found.id);
+            // Pre-select category if parameter is valid
+            if (categoryParam) {
+              const found = data.find((c: Category) => c.id === categoryParam);
+              if (found) {
+                setSelectedCategoryId(found.id);
+              }
             }
           }
         }
