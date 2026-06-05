@@ -101,8 +101,8 @@ export default function HistoryPage() {
     };
 
     fetchReports();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, language]);
 
   const t = {
     confirmDelete:
