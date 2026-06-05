@@ -38,21 +38,29 @@ export default function DashboardLayout({
 
         setUser(user);
 
-        // Fetch profile for avatar
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        setProfile(profileData);
+        // Fetch profile for avatar - wrap in try-catch to not block authChecked
+        try {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          if (profileData) setProfile(profileData);
+        } catch (e) {
+          console.error("Profile fetch error in layout:", e);
+        }
 
         // Fetch unread notification count
-        const { count } = await supabase
-          .from("notifications")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("read", false);
-        setUnreadCount(count || 0);
+        try {
+          const { count } = await supabase
+            .from("notifications")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .eq("read", false);
+          setUnreadCount(count || 0);
+        } catch (e) {
+          console.error("Notification fetch error in layout:", e);
+        }
       } catch (err) {
         console.error("Layout auth error:", err);
       } finally {

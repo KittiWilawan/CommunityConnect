@@ -52,8 +52,8 @@ export default function HistoryPage() {
         } = await supabase.auth.getUser();
 
         if (authError || !user) {
-          // Not logged in — redirect to login
-          router.push("/");
+          // Not logged in — let Middleware handle redirect, just stop loading
+          setLoading(false);
           return;
         }
 

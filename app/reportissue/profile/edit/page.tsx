@@ -30,7 +30,8 @@ export default function EditProfilePage() {
         const supabase = createClient();
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
-          router.push("/reportissue/profile");
+          // Let Middleware handle redirect
+          setLoading(false);
           return;
         }
 

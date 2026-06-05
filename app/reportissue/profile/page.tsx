@@ -35,7 +35,8 @@ export default function ProfilePage() {
         const supabase = createClient();
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
-          router.push('/');
+          // Let Middleware handle redirect
+          setLoading(false);
           return;
         }
 
