@@ -34,7 +34,6 @@ function ReportIssueForm() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch active categories
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -94,8 +93,8 @@ function ReportIssueForm() {
     loginFirst: language === "th" ? "กรุณาเข้าสู่ระบบก่อนทำรายการ" : "Please log in before making a report",
     saveError: language === "th" ? "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " : "Failed to save report: ",
     newReportTitle: language === "th" ? "มีรายการแจ้งเหตุใหม่ 📢" : "New Incident Report 📢",
-    newReportContent: (sub: string, contact: string, desc: string) => 
-      language === "th" 
+    newReportContent: (sub: string, contact: string, desc: string) =>
+      language === "th"
         ? `หัวข้อ: ${sub}\nผู้แจ้ง: ${contact || "ไม่ระบุชื่อ"}\nรายละเอียด: ${desc.slice(0, 60)}...`
         : `Topic: ${sub}\nReporter: ${contact || "Anonymous"}\nDetails: ${desc.slice(0, 60)}...`,
     generalSaveError: language === "th" ? "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง" : "Could not save report. Please try again.",
