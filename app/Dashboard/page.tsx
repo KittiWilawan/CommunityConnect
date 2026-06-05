@@ -2,17 +2,34 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Maximize2, Loader2 } from "lucide-react";
+import { Maximize2, Loader2, Calendar, Clock, FileText, Image as ImageIcon, ChevronRight } from "lucide-react";
 import CategoryCard from "@/app/components/categorycard";
 import { ICON_MAP } from "@/app/lib/icons";
 import type { Category } from "@/app/lib/types";
 import { useSettings } from "@/app/components/SettingsProvider";
+import { createClient } from "@/app/lib/supabase";
+import Link from "next/link";
+
+interface Report {
+  id: string;
+  categoryId: string;
+  categoryTitle: string;
+  categoryColor: string;
+  subcategory: string;
+  description: string;
+  contact: string;
+  image: string | null;
+  status: string;
+  timestamp: string;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
   const { language } = useSettings();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recentReports, setRecentReports] = useState<Report[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -35,12 +52,75 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const fetchRecentReports = useCallback(async () => {
+    try {
+      const supabase = createClient();
+
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        setLoadingReports(false);
+        return;
+      }
+
+      const { data, error: fetchError } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (fetchError) {
+        console.error("Failed to load reports:", fetchError.message);
+        setRecentReports([]);
+        return;
+      }
+
+      const formatted: Report[] = (data || []).map((item: any) => ({
+        id: item.id,
+        categoryId: item.category_id,
+        categoryTitle: item.category_title,
+        categoryColor: item.category_color,
+        subcategory: item.subcategory,
+        description: item.description,
+        contact: item.contact,
+        image: item.image,
+        status: item.status,
+        timestamp: new Date(item.created_at).toLocaleString("th-TH"),
+      }));
+
+      setRecentReports(formatted);
+    } catch (err) {
+      console.error("Failed to load reports from database:", err);
+      setRecentReports([]);
+    } finally {
+      setLoadingReports(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+    fetchRecentReports();
+  }, [fetchCategories, fetchRecentReports]);
 
   const handleSelectCategory = (id: string) => {
     router.push(`/reportissue?category=${id}`);
+  };
+
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case "เสร็จสิ้น":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200/50";
+      case "กำลังดำเนินการ":
+        return "bg-blue-50 text-blue-700 border-blue-200/50";
+      case "ขอข้อมูลเพิ่ม":
+        return "bg-purple-50 text-purple-700 border-purple-200/50";
+      default:
+        return "bg-amber-50 text-amber-700 border-amber-200/50";
+    }
   };
 
   const t = {
@@ -54,6 +134,10 @@ export default function DashboardPage() {
     urgentRepairs: language === "th" ? "จุดซ่อมแซมเร่งด่วน" : "Urgent Repair Spots",
     inProgress: language === "th" ? "กำลังดำเนินการ" : "In Progress",
     recentHistory: language === "th" ? "ประวัติล่าสุด" : "Recent History",
+    noImage: language === "th" ? "ไม่มีรูปภาพแนบ" : "No image attached",
+    contactPrefix: language === "th" ? "ติดต่อ: " : "Contact: ",
+    viewAll: language === "th" ? "ดูทั้งหมด" : "View All",
+    noReports: language === "th" ? "ยังไม่มีรายงาน" : "No reports yet",
   };
 
   return (
@@ -145,6 +229,61 @@ export default function DashboardPage() {
               {t.recentHistory}
             </h3>
           </div>
+          {loadingReports ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+            </div>
+          ) : recentReports.length > 0 ? (
+            <div className="space-y-3">
+              {recentReports.map((report) => (
+                <div
+                  key={report.id}
+                  className="p-3 border border-slate-100 rounded-lg hover:bg-slate-50 transition cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
+                          style={{ backgroundColor: report.categoryColor }}
+                        >
+                          {report.categoryTitle}
+                        </span>
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${getStatusClass(
+                            report.status
+                          )}`}
+                        >
+                          {report.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 font-medium line-clamp-1">
+                        {report.subcategory}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 line-clamp-2">
+                    {report.description}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
+                    <Calendar className="w-3 h-3" />
+                    <span>{report.timestamp.split(" ")[0]}</span>
+                  </div>
+                </div>
+              ))}
+              <Link
+                href="/reportissue/historys"
+                className="text-center text-xs font-semibold text-blue-500 hover:text-blue-600 py-2 flex items-center justify-center gap-1 mt-2 border-t border-slate-100 pt-3"
+              >
+                <span>{t.viewAll}</span>
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-center">
+              <p className="text-xs text-slate-400">{t.noReports}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
