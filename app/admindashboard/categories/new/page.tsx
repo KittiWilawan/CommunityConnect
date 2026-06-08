@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Search, X, Save, AlertCircle } from "lucide-react";
 import { ICON_MAP, ICON_NAMES } from "@/app/lib/icons";
 import CategoryCard from "@/app/components/categorycard";
+import { useSettings } from "@/app/components/SettingsProvider";
 
 const PRESET_COLORS = [
     "#EF4444", "#F59E0B", "#F97316", "#84CC16",
@@ -16,6 +17,7 @@ const PRESET_COLORS = [
 
 export default function NewCategoryPage() {
     const router = useRouter();
+    const { darkMode } = useSettings();
     const [title, setTitle] = useState("");
     const [subtitle, setSubtitle] = useState("");
     const [description, setDescription] = useState("");
@@ -93,13 +95,13 @@ export default function NewCategoryPage() {
                 <div className="flex items-center space-x-3">
                     <Link
                         href="/admindashboard/categories"
-                        className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition shadow-sm active:scale-95"
+                        className={`p-2 rounded-xl border transition shadow-sm active:scale-95 ${darkMode ? "bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50"}`}
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-[#0F172A]">สร้างหมวดหมู่ใหม่</h1>
-                        <p className="text-xs text-slate-500 font-medium">Add New Custom Issue Category</p>
+                        <h1 className={`text-2xl font-bold ${darkMode ? "text-white" : "text-[#0F172A]"}`}>สร้างหมวดหมู่ใหม่</h1>
+                        <p className={`text-xs font-medium ${darkMode ? "text-slate-400" : "text-slate-500"}`}>Add New Custom Issue Category</p>
                     </div>
                 </div>
             </div>
@@ -114,7 +116,7 @@ export default function NewCategoryPage() {
             {/* Main Grid split */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Form Column */}
-                <form onSubmit={handleSave} className="lg:col-span-7 bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 md:p-8 space-y-6">
+                <form onSubmit={handleSave} className={`lg:col-span-7 rounded-3xl border shadow-sm p-4 sm:p-6 md:p-8 space-y-6 ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
 
                     {/* Title & Subtitle */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -175,12 +177,17 @@ export default function NewCategoryPage() {
                             />
                         </div>
                         <div
-                            className="grid gap-2.5 p-3 rounded-2xl border border-slate-200 bg-slate-50/40 max-h-60 overflow-y-auto"
+                            className={`grid gap-2.5 p-3 rounded-2xl border max-h-60 overflow-y-auto ${darkMode ? "border-slate-600 bg-slate-900/50" : "border-slate-200 bg-slate-50/40"}`}
                             style={{ gridTemplateColumns: "repeat(auto-fill, 3rem)" }}
                         >
                             {filteredIcons.map((name) => {
                                 const Icon = ICON_MAP[name];
                                 const isSelected = selectedIcon === name;
+                                const iconColor = isSelected
+                                    ? activeColor
+                                    : darkMode
+                                        ? "#94a3b8"
+                                        : "#475569";
                                 return (
                                     <button
                                         key={name}
@@ -188,19 +195,20 @@ export default function NewCategoryPage() {
                                         onClick={() => setSelectedIcon(name)}
                                         title={name}
                                         className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 border-2 ${isSelected
-                                                ? "bg-white shadow-md scale-105"
-                                                : "bg-[#F8FAFC] border-transparent hover:bg-slate-100 hover:scale-105 active:scale-95 text-slate-700"
+                                                ? darkMode ? "bg-slate-800 shadow-md scale-105" : "bg-white shadow-md scale-105"
+                                                : darkMode
+                                                    ? "bg-slate-700/60 border-transparent hover:bg-slate-600 hover:scale-105 active:scale-95"
+                                                    : "bg-slate-50 border-transparent hover:bg-slate-100 hover:scale-105 active:scale-95"
                                             }`}
                                         style={
                                             isSelected
-                                                ? {
-                                                    borderColor: activeColor,
-                                                    color: activeColor,
-                                                }
-                                                : {}
+                                                ? { borderColor: activeColor }
+                                                : undefined
                                         }
                                     >
-                                        <Icon className="w-5 h-5" />
+                                        <span className="icon-themed" style={{ ["--icon-themed-color" as string]: iconColor }}>
+                                            <Icon className="w-5 h-5" />
+                                        </span>
                                     </button>
                                 );
                             })}
@@ -396,9 +404,9 @@ export default function NewCategoryPage() {
 
                 {/* Live Preview Column */}
                 <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-8">
-                    <div className="bg-slate-100 rounded-3xl border border-slate-200 p-4 sm:p-6 md:p-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[280px] lg:min-h-[360px]">
+                    <div className={`rounded-3xl border p-4 sm:p-6 md:p-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[280px] lg:min-h-[360px] ${darkMode ? "bg-slate-800 border-slate-700" : "bg-slate-100 border-slate-200"}`}>
                         {/* Dots background overlay */}
-                        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] bg-slate-200" />
+                        <div className={`absolute inset-0 opacity-20 [background-size:16px_16px] ${darkMode ? "bg-[radial-gradient(#475569_1px,transparent_1px)] bg-slate-900" : "bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] bg-slate-200"}`} />
 
                         <div className="relative z-10 w-full max-w-sm space-y-6">
                             <div>

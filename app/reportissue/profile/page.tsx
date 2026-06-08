@@ -368,7 +368,7 @@ export default function ProfilePage() {
         </h3>
 
         <div className={`rounded-2xl overflow-hidden divide-y transition-colors ${getContrastClass('card')} ${darkMode ? 'divide-slate-700' : 'divide-slate-100'}`}>
-          <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 transition text-left group cursor-pointer">
+          <Link href="/reportissue/support-legal?section=help" className={`w-full flex items-center justify-between p-4 transition text-left group cursor-pointer ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'}`}>
             <div className="flex items-center space-x-4">
               <div className={`p-2 rounded-xl transition ${getContrastClass('iconBg')}`}>
                 <HelpCircle className="w-5 h-5" />
@@ -379,9 +379,9 @@ export default function ProfilePage() {
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          </Link>
 
-          <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 transition text-left group cursor-pointer">
+          <Link href="/reportissue/support-legal?section=contact" className={`w-full flex items-center justify-between p-4 transition text-left group cursor-pointer ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'}`}>
             <div className="flex items-center space-x-4">
               <div className={`p-2 rounded-xl transition ${getContrastClass('iconBg')}`}>
                 <MessageSquare className="w-5 h-5" />
@@ -392,9 +392,9 @@ export default function ProfilePage() {
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          </Link>
 
-          <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 transition text-left group cursor-pointer">
+          <Link href="/reportissue/support-legal?section=privacy" className={`w-full flex items-center justify-between p-4 transition text-left group cursor-pointer ${darkMode ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50/50'}`}>
             <div className="flex items-center space-x-4">
               <div className={`p-2 rounded-xl transition ${getContrastClass('iconBg')}`}>
                 <Shield className="w-5 h-5" />
@@ -405,7 +405,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          </Link>
         </div>
       </div>
 

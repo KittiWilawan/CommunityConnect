@@ -113,6 +113,11 @@ html.dark .text-sky-600 {
   color: #60a5fa !important;
 }
 
+/* Preserve explicit icon colors (e.g. category icon picker) */
+html.dark .icon-themed svg {
+  color: var(--icon-themed-color) !important;
+}
+
 /* Global Large Text Overrides */
 html.large-text {
   font-size: 112.5% !important;

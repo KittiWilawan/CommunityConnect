@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Loader2,
@@ -11,12 +11,15 @@ import {
   X,
   MapPin,
   Search,
+  Camera,
+  CheckCircle,
 } from "lucide-react";
 import CategoryCard from "@/app/components/categorycard";
 import { ICON_MAP } from "@/app/lib/icons";
 import type { Category } from "@/app/lib/types";
 import { createClient } from "@/app/lib/supabase";
 import { useSettings } from "@/app/components/SettingsProvider";
+import { compressImage } from "@/app/lib/image-utils";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -30,7 +33,10 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("");
-
+  const [completionTargetId, setCompletionTargetId] = useState<string | null>(null);
+  const [completionImage, setCompletionImage] = useState<string | null>(null);
+  const [savingCompletion, setSavingCompletion] = useState(false);
+  const completionFileRef = useRef<HTMLInputElement>(null);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -85,35 +91,91 @@ export default function DashboardPage() {
     }
   }, [searchParams, reports]);
 
-  const handleUpdateStatus = async (reportId: string, newStatus: string) => {
+  const handleUpdateStatus = async (
+    reportId: string,
+    newStatus: string,
+    evidenceImage?: string
+  ) => {
+    if (newStatus === "เสร็จสิ้น" && !evidenceImage) {
+      setCompletionTargetId(reportId);
+      setCompletionImage(null);
+      return;
+    }
+
     const previousReports = reports;
     const previousDetail = selectedReportForDetail;
 
     setReports((prev) =>
-      prev.map((r) => (r.id === reportId ? { ...r, status: newStatus } : r))
+      prev.map((r) =>
+        r.id === reportId
+          ? {
+              ...r,
+              status: newStatus,
+              ...(evidenceImage ? { completion_image: evidenceImage } : {}),
+            }
+          : r
+      )
     );
     if (selectedReportForDetail?.id === reportId) {
-      setSelectedReportForDetail({ ...selectedReportForDetail, status: newStatus });
+      setSelectedReportForDetail({
+        ...selectedReportForDetail,
+        status: newStatus,
+        ...(evidenceImage ? { completion_image: evidenceImage } : {}),
+      });
     }
 
     try {
       const res = await fetch(`/api/reports/${reportId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({
+          status: newStatus,
+          ...(evidenceImage ? { completion_image: evidenceImage } : {}),
+        }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setReports(previousReports);
         setSelectedReportForDetail(previousDetail);
-        alert("ไม่สามารถอัปเดตสถานะได้: " + (body.error || res.statusText));
+        alert(
+          (language === "th" ? "ไม่สามารถอัปเดตสถานะได้: " : "Failed to update status: ") +
+            (body.error || res.statusText)
+        );
       }
     } catch {
       setReports(previousReports);
       setSelectedReportForDetail(previousDetail);
-      alert("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+      alert(
+        language === "th"
+          ? "เกิดข้อผิดพลาดในการอัปเดตสถานะ"
+          : "Error updating status"
+      );
     }
+  };
+
+  const handleCompletionImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target?.result as string;
+      const compressed = await compressImage(dataUrl, 600, 0.6);
+      setCompletionImage(compressed);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleConfirmCompletion = async () => {
+    if (!completionTargetId || !completionImage) return;
+
+    setSavingCompletion(true);
+    await handleUpdateStatus(completionTargetId, "เสร็จสิ้น", completionImage);
+    setSavingCompletion(false);
+    setCompletionTargetId(null);
+    setCompletionImage(null);
   };
 
   const handleDeleteReport = async (reportId: string) => {
@@ -170,7 +232,14 @@ export default function DashboardPage() {
     return acc;
   }, []);
 
+  const activeReports = reports.filter((r) => r.status !== "เสร็จสิ้น");
+
   const filteredReports = reports.filter((report) => {
+    // Completed reports only appear when the Completed filter is active
+    if (!selectedStatusFilter && report.status === "เสร็จสิ้น") {
+      return false;
+    }
+
     // 1. Search Query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -377,7 +446,9 @@ export default function DashboardPage() {
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-4">
                 <h3 className="text-lg font-bold text-[#0F172A]">
-                  {t.allReports} ({reports.length})
+                  {selectedStatusFilter === "เสร็จสิ้น"
+                    ? `${t.completed} (${filteredReports.length})`
+                    : `${t.allReports} (${activeReports.length})`}
                 </h3>
                 {/* Search Bar */}
                 <div className="relative w-full sm:w-72">
@@ -564,12 +635,30 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
-                {searchQuery && filteredReports.length === 0 && (
+                {filteredReports.length === 0 && (
                   <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <Search className="w-6 h-6 text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-400 text-xs">
-                      {language === "th" ? `ไม่พบรายการที่ตรงกับ "${searchQuery}"` : `No reports matching "${searchQuery}"`}
-                    </p>
+                    {searchQuery ? (
+                      <>
+                        <Search className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                        <p className="text-slate-400 text-xs">
+                          {language === "th" ? `ไม่พบรายการที่ตรงกับ "${searchQuery}"` : `No reports matching "${searchQuery}"`}
+                        </p>
+                      </>
+                    ) : selectedStatusFilter === "เสร็จสิ้น" ? (
+                      <>
+                        <AlertCircle className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                        <p className="text-slate-400 text-xs">
+                          {language === "th" ? "ยังไม่มีรายการที่เสร็จสิ้น" : "No completed reports yet"}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                        <p className="text-slate-400 text-xs">
+                          {language === "th" ? "ไม่มีรายการที่กำลังดำเนินการ — กด \"เสร็จสิ้น\" เพื่อดูงานที่ปิดแล้ว" : "No active reports — click \"Completed\" to view finished items"}
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -633,6 +722,23 @@ export default function DashboardPage() {
                   <span className="text-[10px] text-slate-400 font-mono">ID: {selectedReportForDetail.id.slice(0, 8)}...</span>
                 </div>
               </div>
+
+              {selectedReportForDetail.status === "เสร็จสิ้น" &&
+                selectedReportForDetail.completion_image && (
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      {language === "th"
+                        ? "หลักฐานการแก้ไขเสร็จสิ้น"
+                        : "Completion evidence"}
+                    </p>
+                    <img
+                      src={selectedReportForDetail.completion_image}
+                      alt="Completion evidence"
+                      className="w-full h-40 object-cover rounded-xl border border-emerald-200"
+                    />
+                  </div>
+                )}
             </div>
 
             {/* Right side: Info */}
@@ -722,10 +828,9 @@ export default function DashboardPage() {
                     {language === "th" ? "ขอข้อมูลเพิ่ม" : "Req Info"}
                   </button>
                   <button
-                    onClick={() => {
-                      handleUpdateStatus(selectedReportForDetail.id, "เสร็จสิ้น");
-                      setSelectedReportForDetail((prev: any) => ({ ...prev, status: "เสร็จสิ้น" }));
-                    }}
+                    onClick={() =>
+                      handleUpdateStatus(selectedReportForDetail.id, "เสร็จสิ้น")
+                    }
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer text-center ${selectedReportForDetail.status === "เสร็จสิ้น"
                       ? "bg-emerald-100 border-emerald-300 text-emerald-800"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -735,6 +840,100 @@ export default function DashboardPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completion Evidence Modal */}
+      {completionTargetId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
+            onClick={() => {
+              setCompletionTargetId(null);
+              setCompletionImage(null);
+            }}
+          />
+          <div className="relative bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 z-10 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800">
+                {language === "th"
+                  ? "แนบรูปหลักฐานการแก้ไข"
+                  : "Attach completion evidence"}
+              </h3>
+              <button
+                onClick={() => {
+                  setCompletionTargetId(null);
+                  setCompletionImage(null);
+                }}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              {language === "th"
+                ? "กรุณาแนบรูปภาพหลักฐานแสดงว่าการแก้ไขเสร็จสมบูรณ์แล้ว ก่อนเปลี่ยนสถานะเป็นเสร็จสิ้น"
+                : "Please attach a photo proving the issue has been resolved before marking as complete."}
+            </p>
+
+            {completionImage ? (
+              <div className="relative">
+                <img
+                  src={completionImage}
+                  alt="Evidence preview"
+                  className="w-full h-48 object-cover rounded-xl border border-emerald-200"
+                />
+                <button
+                  onClick={() => setCompletionImage(null)}
+                  className="absolute top-2 right-2 p-1 bg-white/90 rounded-full text-red-500 hover:bg-white shadow cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => completionFileRef.current?.click()}
+                className="w-full h-40 border-2 border-dashed border-emerald-200 rounded-xl flex flex-col items-center justify-center text-emerald-400 hover:border-emerald-400 hover:bg-emerald-50/50 transition cursor-pointer"
+              >
+                <Camera className="w-10 h-10 mb-2" />
+                <span className="text-xs font-bold">
+                  {language === "th" ? "เลือกรูปหลักฐาน" : "Select evidence photo"}
+                </span>
+              </div>
+            )}
+            <input
+              ref={completionFileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleCompletionImageChange}
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setCompletionTargetId(null);
+                  setCompletionImage(null);
+                }}
+                className="flex-1 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+              >
+                {language === "th" ? "ยกเลิก" : "Cancel"}
+              </button>
+              <button
+                onClick={handleConfirmCompletion}
+                disabled={!completionImage || savingCompletion}
+                className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {savingCompletion ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="w-4 h-4" />
+                )}
+                {language === "th" ? "ยืนยันเสร็จสิ้น" : "Confirm complete"}
+              </button>
             </div>
           </div>
         </div>

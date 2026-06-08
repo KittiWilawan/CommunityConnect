@@ -91,6 +91,7 @@ create table if not exists public.reports (
   description text not null,
   contact text,
   image text, -- Store base64 or storage url
+  completion_image text, -- Admin evidence when marking as complete
   status text default 'รอดำเนินการ' check (status in ('รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ขอข้อมูลเพิ่ม')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -133,6 +134,10 @@ create policy "Allow admins to update reports" on public.reports
       where id = auth.uid() and role = 'admin'
     )
   );
+
+create policy "Allow owners to update their own reports" on public.reports
+  for update using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 
 -- 5. Grant table-level permissions to Supabase roles
