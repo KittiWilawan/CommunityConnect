@@ -245,7 +245,6 @@ function ReportIssueForm() {
       setSaving(false);
     }
   };
-
   const resetForm = () => {
     setSelectedCategoryId("");
     setSelectedSubcategory("");
@@ -256,7 +255,6 @@ function ReportIssueForm() {
     setMapKey((k) => k + 1);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-3">

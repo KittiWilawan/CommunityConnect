@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import L from "leaflet";
+// ❌ ลบการ import L แบบปกติออกเพื่อไม่ให้เซิร์ฟเวอร์ตื่นตระหนก
+// import L from "leaflet"; 
 import "leaflet/dist/leaflet.css";
 import { Loader2 } from "lucide-react";
 import {
@@ -34,12 +35,8 @@ interface IncidentStatusMapProps {
   heightClass?: string;
 }
 
-const LEAFLET_MAX_BOUNDS: L.LatLngBoundsExpression = [
-  [BANGKOK_BOUNDS.south, BANGKOK_BOUNDS.west],
-  [BANGKOK_BOUNDS.north, BANGKOK_BOUNDS.east],
-];
-
-function createPinIcon(color: string): L.DivIcon {
+// 🟢 ปรับฟังก์ชันสร้าง Icon ให้ปลอดภัย: ส่งผ่านตัวแปร L จากใน useEffect แทนการเรียกใช้ตรงๆ ทั่วโลก
+function createPinIcon(L: any, color: string) {
   return L.divIcon({
     className: "",
     html: `<span style="
@@ -73,11 +70,22 @@ export default function IncidentStatusMap({
   heightClass = "h-80",
 }: IncidentStatusMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const mapRef = useRef<any>(null); // เปลี่ยนจาก L.Map เป็น any เพื่อเลี่ยงการตรวจของประเภทข้อมูล
+  const markersLayerRef = useRef<any>(null);
+
+  // 🟢 สร้าง State สำหรับเก็บไลบรารี Leaflet ที่โหลดแบบไดนามิกเฉพาะบนเบราว์เซอร์
+  const [L, setL] = useState<any>(null);
+
   const [activeStatuses, setActiveStatuses] = useState<Set<string>>(
     () => new Set(REPORT_STATUSES)
   );
+
+  // 🟢 ดึงข้อมูล Leaflet เข้ามาทำงานใน UseEffect (รันเฉพาะฝั่ง Client แน่นอน 100%)
+  useEffect(() => {
+    import("leaflet").then((leaflet) => {
+      setL(leaflet.default ? leaflet.default : leaflet);
+    });
+  }, []);
 
   const locatedReports = useMemo(
     () => reports.filter(hasValidCoords),
@@ -118,7 +126,7 @@ export default function IncidentStatusMap({
     setActiveStatuses(new Set(REPORT_STATUSES));
   };
 
-  const t = {
+  const t = useMemo(() => ({
     filterHint:
       language === "th"
         ? "กดเพื่อกรองสถานะ (กดซ้าย = เฉพาะสถานะนั้น)"
@@ -133,9 +141,12 @@ export default function IncidentStatusMap({
       language === "th"
         ? "รายการที่เลือกไม่มีตำแหน่งบนแผนที่"
         : "Selected reports have no map location",
-  };
+  }), [language]);
 
   const updateMarkers = useCallback(() => {
+    // 🟢 ถ้าตัวแปร L ยังไม่พร้อมทำงาน ให้ข้ามฟังก์ชันนี้ไปก่อนเพื่อความปลอดภัย
+    if (!L) return;
+
     const map = mapRef.current;
     const layer = markersLayerRef.current;
     if (!map || !layer) return;
@@ -147,11 +158,11 @@ export default function IncidentStatusMap({
     const bounds = L.latLngBounds([]);
 
     for (const report of filteredReports) {
-      const latlng: L.LatLngExpression = [report.latitude, report.longitude];
+      const latlng: [number, number] = [report.latitude, report.longitude];
       bounds.extend(latlng);
 
       const marker = L.marker(latlng, {
-        icon: createPinIcon(getStatusColor(report.status)),
+        icon: createPinIcon(L, getStatusColor(report.status)), // ส่ง L เข้าไปทำงานด้วย
       });
 
       const dateStr = new Date(report.created_at).toLocaleString(
@@ -171,11 +182,10 @@ export default function IncidentStatusMap({
           <p style="font-size:11px;color:#475569;margin:0 0 6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">
             ${report.description}
           </p>
-          ${
-            report.location_address
-              ? `<p style="font-size:10px;color:#94a3b8;margin:0 0 6px;line-height:1.3">${report.location_address}</p>`
-              : ""
-          }
+          ${report.location_address
+          ? `<p style="font-size:10px;color:#94a3b8;margin:0 0 6px;line-height:1.3">${report.location_address}</p>`
+          : ""
+        }
           <p style="font-size:10px;color:#94a3b8;margin:0 0 8px">${dateStr}</p>
           <a href="/reportissue/historys?report=${report.id}" style="font-size:10px;font-weight:700;color:#2563eb;text-decoration:none">
             ${t.viewHistory} →
@@ -196,10 +206,16 @@ export default function IncidentStatusMap({
     } else if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15, animate: true });
     }
-  }, [filteredReports, language, t.viewHistory]);
+  }, [filteredReports, language, t.viewHistory, L]);
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    // 🟢 ต้องมีตัวแปร L (Leaflet) ตื่นขึ้นมาก่อน ถึงจะเริ่มประกอบร่างสร้างแผนที่
+    if (!mapContainerRef.current || mapRef.current || !L) return;
+
+    const LEAFLET_MAX_BOUNDS = [
+      [BANGKOK_BOUNDS.south, BANGKOK_BOUNDS.west],
+      [BANGKOK_BOUNDS.north, BANGKOK_BOUNDS.east],
+    ];
 
     const map = L.map(mapContainerRef.current, {
       center: [BANGKOK_CENTER.lat, BANGKOK_CENTER.lng],
@@ -226,7 +242,7 @@ export default function IncidentStatusMap({
       mapRef.current = null;
       markersLayerRef.current = null;
     };
-  }, []);
+  }, [L]);
 
   useEffect(() => {
     updateMarkers();
@@ -238,6 +254,16 @@ export default function IncidentStatusMap({
     }, 100);
     return () => clearTimeout(timer);
   }, [heightClass]);
+
+  // 🟢 แสดงสถานะการโหลดชั่วคราวระหว่างรอแผนที่ตื่นตัวบนเบราว์เซอร์ เพื่อความปลอดภัย 100% ตอน Build
+  if (!L) {
+    return (
+      <div className={`${heightClass} bg-slate-100 flex items-center justify-center`}>
+        <Loader2 className="w-6 h-6 text-slate-400 animate-spin mr-2" />
+        <span className="text-xs text-slate-400">กำลังโหลดระบบแผนที่...</span>
+      </div>
+    );
+  }
 
   const allActive = activeStatuses.size === REPORT_STATUSES.length;
 
@@ -276,11 +302,10 @@ export default function IncidentStatusMap({
                 <button
                   type="button"
                   onClick={() => toggleStatus(status)}
-                  className={`flex-1 flex items-center space-x-2 text-left rounded-lg px-2 py-1.5 transition cursor-pointer ${
-                    active
-                      ? "bg-slate-50 ring-1 ring-slate-200"
-                      : "opacity-40 hover:opacity-60"
-                  }`}
+                  className={`flex-1 flex items-center space-x-2 text-left rounded-lg px-2 py-1.5 transition cursor-pointer ${active
+                    ? "bg-slate-50 ring-1 ring-slate-200"
+                    : "opacity-40 hover:opacity-60"
+                    }`}
                 >
                   <span
                     className="w-2.5 h-2.5 rounded-full shrink-0"
