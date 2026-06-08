@@ -112,12 +112,12 @@ export default function CategoriesPage() {
                         <div
                             key={service.id}
                             className={`rounded-2xl border shadow-sm p-4 transition-all duration-300 ${service.enabled
-                                    ? darkMode
-                                        ? "bg-slate-800 border-slate-700 text-white"
-                                        : "bg-white border-slate-200 text-slate-850"
-                                    : darkMode
-                                        ? "bg-slate-800/40 border-slate-800 opacity-60 text-slate-400"
-                                        : "bg-white border-slate-100 opacity-60"
+                                ? darkMode
+                                    ? "bg-slate-800 border-slate-700 text-white"
+                                    : "bg-white border-slate-200 text-slate-850"
+                                : darkMode
+                                    ? "bg-slate-800/40 border-slate-800 opacity-60 text-slate-400"
+                                    : "bg-white border-slate-100 opacity-60"
                                 }`}
                         >
                             <div className="flex items-center justify-between">
@@ -201,8 +201,8 @@ export default function CategoriesPage() {
                                             className="sr-only peer"
                                         />
                                         <div className={`w-14 h-7 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${darkMode
-                                                ? 'bg-slate-700 peer-checked:bg-blue-600'
-                                                : 'bg-slate-200 peer-checked:bg-[#0066B2]'
+                                            ? 'bg-slate-700 peer-checked:bg-blue-600'
+                                            : 'bg-slate-200 peer-checked:bg-[#0066B2]'
                                             }`} />
                                     </label>
                                 </div>
@@ -218,14 +218,14 @@ export default function CategoriesPage() {
                             {t.noCategoriesDesc}
                         </p>
                     </div>
-                )}t
+                )}
             </div>
 
             <Link
                 href="/admindashboard/categories/new"
                 className={`w-full font-bold text-sm py-4 rounded-xl transition duration-200 flex items-center justify-center space-x-2 shadow-md active:scale-[0.99] cursor-pointer ${darkMode
-                        ? 'bg-sky-600 hover:bg-sky-500 text-white'
-                        : 'bg-[#0F172A] hover:bg-slate-800 text-white'
+                    ? 'bg-sky-600 hover:bg-sky-500 text-white'
+                    : 'bg-[#0F172A] hover:bg-slate-800 text-white'
                     }`}
             >
                 <PlusCircle className="w-5 h-5" />
