@@ -124,6 +124,27 @@ export default function DashboardPage() {
         });
       }
 
+      // Send notification to all admins about the status update
+      try {
+        const { data: admins } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("role", "admin");
+
+        if (admins && admins.length > 0) {
+          const adminNotifs = admins.map((admin: any) => ({
+            user_id: admin.id,
+            title: "🔄 อัปเดตสถานะรายการแจ้งเหตุ",
+            content: `รายการ "${report.subcategory || report.category_title}" ถูกเปลี่ยนสถานะเป็น "${newStatus}"\nจาก: ${report.contact || "ไม่ระบุชื่อ"}`,
+            report_id: reportId,
+            read: false,
+          }));
+          await supabase.from("notifications").insert(adminNotifs);
+        }
+      } catch (err) {
+        console.error("Failed to insert admin status update notifications:", err);
+      }
+
       setReports((prev) =>
         prev.map((r) => (r.id === reportId ? { ...r, status: newStatus } : r))
       );
