@@ -91,6 +91,9 @@ create table if not exists public.reports (
   description text not null,
   contact text,
   image text, -- Store base64 or storage url
+  latitude double precision,
+  longitude double precision,
+  location_address text,
   completion_image text, -- Admin evidence when marking as complete
   status text default 'รอดำเนินการ' check (status in ('รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ขอข้อมูลเพิ่ม')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -194,7 +197,13 @@ grant select, insert, update, delete on public.notifications to authenticated;
 grant select on public.notifications to anon;
 
 
--- 8. Migrate legacy normaluser role to member
+-- 8. Add GPS location columns to reports (Bangkok map pin)
+alter table public.reports add column if not exists latitude double precision;
+alter table public.reports add column if not exists longitude double precision;
+alter table public.reports add column if not exists location_address text;
+
+
+-- 9. Migrate legacy normaluser role to member
 alter table public.profiles drop constraint if exists profiles_role_check;
 update public.profiles set role = 'member' where role = 'normaluser' or role is null;
 alter table public.profiles alter column role set default 'member';

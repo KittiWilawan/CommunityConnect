@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -19,9 +20,21 @@ import {
   Send,
   Loader2,
   CheckCircle,
+  MapPin,
 } from "lucide-react";
 import { useSettings } from "@/app/components/SettingsProvider";
 import { compressImage } from "@/app/lib/image-utils";
+import { getStatusClass } from "@/app/lib/report-status";
+import type { MapReportPin } from "@/app/components/IncidentStatusMap";
+import { IncidentStatusMapLoading } from "@/app/components/IncidentStatusMap";
+
+const IncidentStatusMap = dynamic(
+  () => import("@/app/components/IncidentStatusMap"),
+  {
+    ssr: false,
+    loading: () => <IncidentStatusMapLoading heightClass="h-72" />,
+  }
+);
 
 interface Report {
   id: string;
@@ -35,6 +48,10 @@ interface Report {
   completionImage: string | null;
   status: string;
   timestamp: string;
+  createdAt: string;
+  latitude: number | null;
+  longitude: number | null;
+  locationAddress: string | null;
 }
 
 export default function HistoryContent() {
@@ -94,6 +111,12 @@ export default function HistoryContent() {
           completionImage: item.completion_image || null,
           status: item.status,
           timestamp: new Date(item.created_at).toLocaleString("th-TH"),
+          createdAt: item.created_at,
+          latitude:
+            typeof item.latitude === "number" ? item.latitude : null,
+          longitude:
+            typeof item.longitude === "number" ? item.longitude : null,
+          locationAddress: item.location_address || null,
         }));
 
         if (!cancelled) {
@@ -198,6 +221,16 @@ export default function HistoryContent() {
     saveError: language === "th" ? "ไม่สามารถบันทึกได้: " : "Failed to save: ",
     completionEvidence:
       language === "th" ? "หลักฐานการแก้ไขเสร็จสิ้น" : "Completion evidence",
+    mapTitle:
+      language === "th" ? "แผนที่ตำแหน่งที่แจ้งเหตุ" : "Reported Locations Map",
+    mapDesc:
+      language === "th"
+        ? "จุดปักหมุดจากการแจ้งเหตุของคุณ กรองตามสถานะได้"
+        : "Pins from your reports, filterable by status",
+    issueLocation:
+      language === "th" ? "ตำแหน่งที่เกิดปัญหา" : "Issue location",
+    noLocation:
+      language === "th" ? "ไม่มีข้อมูลตำแหน่ง" : "No location data",
   };
 
   const handleDeleteReport = async (id: string) => {
@@ -291,18 +324,28 @@ export default function HistoryContent() {
     }
   };
 
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case "เสร็จสิ้น":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200/50";
-      case "กำลังดำเนินการ":
-        return "bg-blue-50 text-blue-700 border-blue-200/50";
-      case "ขอข้อมูลเพิ่ม":
-        return "bg-purple-50 text-purple-700 border-purple-200/50";
-      default:
-        return "bg-amber-50 text-amber-700 border-amber-200/50";
-    }
-  };
+  const mapReports: MapReportPin[] = useMemo(
+    () =>
+      reports
+        .filter(
+          (r) =>
+            typeof r.latitude === "number" &&
+            typeof r.longitude === "number"
+        )
+        .map((r) => ({
+          id: r.id,
+          latitude: r.latitude as number,
+          longitude: r.longitude as number,
+          location_address: r.locationAddress,
+          status: r.status,
+          subcategory: r.subcategory,
+          category_title: r.categoryTitle,
+          category_color: r.categoryColor,
+          description: r.description,
+          created_at: r.createdAt,
+        })),
+    [reports]
+  );
 
   if (loading) {
     return (
@@ -387,6 +430,21 @@ export default function HistoryContent() {
           </Link>
         </div>
       </div>
+
+      {mapReports.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-slate-100">
+            <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>
+            <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
+          </div>
+          <IncidentStatusMap
+            reports={mapReports}
+            language={language}
+            heightClass="h-72"
+          />
+        </div>
+      )}
+
       {reports.length > 0 ? (
         <div className="space-y-4">
           {filteredReports.map((report) => (
@@ -461,6 +519,21 @@ export default function HistoryContent() {
                     <p className="text-sm text-slate-600 leading-relaxed break-words whitespace-pre-wrap">
                       {report.description}
                     </p>
+                  </div>
+
+                  <div className="flex items-start gap-1.5 pt-1">
+                    <MapPin className="w-3.5 h-3.5 text-[#C92A2A] shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                        {t.issueLocation}
+                      </p>
+                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                        {report.locationAddress ||
+                          (report.latitude != null && report.longitude != null
+                            ? `${report.latitude.toFixed(5)}, ${report.longitude.toFixed(5)}`
+                            : t.noLocation)}
+                      </p>
+                    </div>
                   </div>
 
                   {report.status === "เสร็จสิ้น" && report.completionImage && (

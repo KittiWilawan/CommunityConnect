@@ -62,11 +62,24 @@ export async function POST(request: NextRequest) {
       description,
       contact,
       image,
+      latitude,
+      longitude,
+      location_address,
     } = body;
 
     if (!category_id || !subcategory || !String(description || "").trim()) {
       return Response.json(
         { error: "category_id, subcategory, and description are required" },
+        { status: 400 }
+      );
+    }
+
+    const lat = latitude != null ? Number(latitude) : null;
+    const lng = longitude != null ? Number(longitude) : null;
+
+    if (lat == null || lng == null || Number.isNaN(lat) || Number.isNaN(lng)) {
+      return Response.json(
+        { error: "latitude and longitude are required" },
         { status: 400 }
       );
     }
@@ -82,6 +95,9 @@ export async function POST(request: NextRequest) {
         description: String(description).trim(),
         contact: String(contact || "").trim(),
         image: image || null,
+        latitude: lat,
+        longitude: lng,
+        location_address: location_address ? String(location_address).trim() : null,
         status: "รอดำเนินการ",
       })
       .select("id")

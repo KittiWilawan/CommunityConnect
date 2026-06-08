@@ -1,18 +1,30 @@
 "use client";
 
 import React, { useState, useRef, useEffect, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Camera,
-  MapPin,
-  Navigation,
   Send,
   X,
   CheckCircle,
   Loader2,
 } from "lucide-react";
 import type { Category } from "@/app/lib/types";
+import type { LocationValue } from "@/app/components/BangkokLocationPicker";
 import { useSettings } from "@/app/components/SettingsProvider";
+
+const BangkokLocationPicker = dynamic(
+  () => import("@/app/components/BangkokLocationPicker"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-2xl h-64 bg-slate-100 border border-slate-200 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+      </div>
+    ),
+  }
+);
 
 // Compress image to JPEG at reduced quality/size to stay within Supabase row limits
 function compressImage(dataUrl: string, maxWidth = 800, quality = 0.7): Promise<string> {
@@ -54,6 +66,8 @@ function ReportIssueForm() {
   const [description, setDescription] = useState("");
   const [contact, setContact] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [location, setLocation] = useState<LocationValue | null>(null);
+  const [mapKey, setMapKey] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,6 +138,7 @@ function ReportIssueForm() {
 
   const t = {
     fillRequired: language === "th" ? "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (หมวดหมู่หลัก, หมวดหมู่ย่อย, และรายละเอียดปัญหา)" : "Please fill in all required fields (main category, subcategory, and description)",
+    locationRequired: language === "th" ? "กรุณาปักหมุดตำแหน่งที่เกิดปัญหาบนแผนที่ (เฉพาะเขตกรุงเทพมหานคร)" : "Please pin the issue location on the map (Bangkok only)",
     loginFirst: language === "th" ? "กรุณาเข้าสู่ระบบก่อนทำรายการ" : "Please log in before making a report",
     saveError: language === "th" ? "เกิดข้อผิดพลาดในการบันทึกข้อมูล: " : "Failed to save report: ",
     newReportTitle: language === "th" ? "มีรายการแจ้งเหตุใหม่ 📢" : "New Incident Report 📢",
@@ -139,8 +154,6 @@ function ReportIssueForm() {
     tapUpload: language === "th" ? "แตะเพื่อถ่ายภาพ / อัปโหลด" : "Tap to Capture / Upload",
     uploadDesc: language === "th" ? "แนบรูปภาพเพื่อให้เจ้าหน้าที่เห็นปัญหาชัดเจนยิ่งขึ้น" : "Attach an image to help officials see the problem more clearly",
     changeImage: language === "th" ? "เปลี่ยนรูปภาพ" : "Change Image",
-    issueLoc: language === "th" ? "ตำแหน่งที่เกิดปัญหา" : "Issue Location",
-    currentLoc: language === "th" ? "ระบุตำแหน่งปัจจุบัน" : "Use Current Location",
     selectCategory: language === "th" ? "เลือกประเภทบริการ (Category)" : "Select Service Category (Category)",
     selectMainCategoryOpt: language === "th" ? "เลือกหมวดหมู่หลัก..." : "Select main category...",
     selectSubcategory: language === "th" ? "ระบุรายละเอียดประเภทปัญหา (Problem Subcategory)" : "Specify Subcategory (Problem Subcategory)",
@@ -164,6 +177,11 @@ function ReportIssueForm() {
     e.preventDefault();
     if (!selectedCategoryId || !selectedSubcategory || !description.trim()) {
       alert(t.fillRequired);
+      return;
+    }
+
+    if (!location) {
+      alert(t.locationRequired);
       return;
     }
 
@@ -193,6 +211,9 @@ function ReportIssueForm() {
           description: description.trim(),
           contact: contact.trim(),
           image: imageToStore,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          location_address: location.address || null,
           notification_title: t.newReportTitle,
           notification_content: t.newReportContent(
             selectedSubcategory,
@@ -231,6 +252,8 @@ function ReportIssueForm() {
     setDescription("");
     setContact("");
     setSelectedImage(null);
+    setLocation(null);
+    setMapKey((k) => k + 1);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -310,26 +333,13 @@ function ReportIssueForm() {
             )}
           </div>
 
-          <div className="bg-slate-100 rounded-2xl h-64 relative overflow-hidden border border-slate-200 shadow-inner shrink-0">
-            <div className="absolute inset-0 opacity-30 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] bg-slate-200-grid"></div>
-
-            <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 flex items-center space-x-1.5 text-xs font-semibold text-slate-700">
-              <MapPin className="w-3.5 h-3.5 text-[#C92A2A]" />
-              <span>{t.issueLoc}</span>
-            </div>
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <MapPin className="w-8 h-8 text-[#C92A2A] drop-shadow-md animate-bounce" />
-            </div>
-
-            <button
-              type="button"
-              className="absolute bottom-4 right-4 bg-[#0F172A] hover:bg-slate-800 text-white px-3 py-2 rounded-lg shadow-md flex items-center space-x-1.5 text-xs font-semibold transition active:scale-95 cursor-pointer"
-            >
-              <Navigation className="w-3.5 h-3.5 fill-white" />
-              <span>{t.currentLoc}</span>
-            </button>
-          </div>
+          <BangkokLocationPicker
+            key={mapKey}
+            value={location}
+            onChange={setLocation}
+            language={language}
+            className="shrink-0"
+          />
         </div>
 
         {/* Right Column - Form */}

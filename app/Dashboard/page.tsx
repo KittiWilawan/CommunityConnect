@@ -1,23 +1,27 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Maximize2, Loader2, ChevronRight, Clock, FileText } from "lucide-react";
+import { Maximize2, Loader2, ChevronRight, Clock, FileText, X } from "lucide-react";
 import CategoryCard from "@/app/components/categorycard";
 import { ICON_MAP } from "@/app/lib/icons";
 import type { Category } from "@/app/lib/types";
 import { useSettings } from "@/app/components/SettingsProvider";
+import { getStatusClass } from "@/app/lib/report-status";
+import type { MapReportPin } from "@/app/components/IncidentStatusMap";
+import { IncidentStatusMapLoading } from "@/app/components/IncidentStatusMap";
 
-interface ReportItem {
-  id: string;
-  category_title: string;
-  category_color: string;
-  subcategory: string;
-  description: string;
-  status: string;
-  created_at: string;
-}
+const IncidentStatusMap = dynamic(
+  () => import("@/app/components/IncidentStatusMap"),
+  {
+    ssr: false,
+    loading: () => <IncidentStatusMapLoading heightClass="h-80" />,
+  }
+);
+
+interface ReportItem extends MapReportPin {}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -26,6 +30,7 @@ export default function DashboardPage() {
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingReports, setLoadingReports] = useState(true);
+  const [mapExpanded, setMapExpanded] = useState(false);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -71,22 +76,7 @@ export default function DashboardPage() {
     router.push(`/reportissue?category=${id}`);
   };
 
-  const pendingCount = reports.filter((r) => r.status === "รอดำเนินการ").length;
-  const inProgressCount = reports.filter((r) => r.status === "กำลังดำเนินการ").length;
   const recentReports = reports.slice(0, 5);
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case "เสร็จสิ้น":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200/50";
-      case "กำลังดำเนินการ":
-        return "bg-blue-50 text-blue-700 border-blue-200/50";
-      case "ขอข้อมูลเพิ่ม":
-        return "bg-purple-50 text-purple-700 border-purple-200/50";
-      default:
-        return "bg-amber-50 text-amber-700 border-amber-200/50";
-    }
-  };
 
   const t = {
     welcome: language === "th" ? "ยินดีต้อนรับกลับมา" : "Welcome Back",
@@ -103,11 +93,10 @@ export default function DashboardPage() {
     mapTitle: language === "th" ? "แผนที่สถานะเรียลไทม์" : "Real-time Status Map",
     mapDesc:
       language === "th"
-        ? "ตรวจสอบจุดที่กำลังดำเนินการซ่อมแซมใกล้คุณ"
-        : "Check active repair spots near you",
+        ? "ดูจุดที่แจ้งเหตุบนแผนที่ กรองตามสถานะได้"
+        : "View reported locations on the map, filter by status",
     expandMap: language === "th" ? "ขยายแผนที่" : "Maximize Map",
-    urgentRepairs: language === "th" ? "รอดำเนินการ" : "Pending",
-    inProgress: language === "th" ? "กำลังดำเนินการ" : "In Progress",
+    closeMap: language === "th" ? "ปิด" : "Close",
     recentHistory: language === "th" ? "ประวัติล่าสุด" : "Recent History",
     viewAll: language === "th" ? "ดูทั้งหมด" : "View All",
     noHistory:
@@ -167,28 +156,24 @@ export default function DashboardPage() {
               <h3 className="text-lg font-bold text-[#0F172A]">{t.mapTitle}</h3>
               <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
             </div>
-            <button className="flex items-center space-x-1.5 text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setMapExpanded(true)}
+              className="flex items-center space-x-1.5 text-xs font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition cursor-pointer"
+            >
               <Maximize2 className="w-3.5 h-3.5" />
               <span>{t.expandMap}</span>
             </button>
           </div>
-          <div className="h-64 bg-slate-100 relative p-4 flex flex-col justify-end">
-            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] bg-slate-200" />
-            <div className="relative bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-md border border-slate-200/50 w-56 space-y-2 text-xs font-medium">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 bg-red-600 rounded-full" />
-                <span className="text-slate-700">
-                  {t.urgentRepairs} ({pendingCount})
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                <span className="text-slate-700">
-                  {t.inProgress} ({inProgressCount})
-                </span>
-              </div>
-            </div>
-          </div>
+          {loadingReports ? (
+            <IncidentStatusMapLoading heightClass="h-80" />
+          ) : (
+            <IncidentStatusMap
+              reports={reports}
+              language={language}
+              heightClass="h-80"
+            />
+          )}
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
@@ -214,7 +199,7 @@ export default function DashboardPage() {
               {recentReports.map((report) => (
                 <Link
                   key={report.id}
-                  href="/reportissue/historys"
+                  href={`/reportissue/historys?report=${report.id}`}
                   className="block p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition group"
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -263,6 +248,33 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {mapExpanded && (
+        <div className="fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 flex items-center justify-between border-b border-slate-100 shrink-0">
+              <div>
+                <h3 className="text-lg font-bold text-[#0F172A]">{t.mapTitle}</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMapExpanded(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0">
+              <IncidentStatusMap
+                reports={reports}
+                language={language}
+                heightClass="h-[70vh]"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

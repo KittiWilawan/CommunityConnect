@@ -103,11 +103,10 @@ function SupportLegalContent() {
     ? "bg-slate-800 border-slate-700 text-white"
     : "bg-white border-slate-200 text-slate-800";
   const mutedClass = darkMode ? "text-slate-400" : "text-slate-500";
-  const inputClass = `w-full px-4 py-3 rounded-xl border text-sm outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 ${
-    darkMode
-      ? "bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
-      : "bg-white border-slate-200 text-slate-800 placeholder:text-slate-400"
-  }`;
+  const inputClass = `w-full px-4 py-3 rounded-xl border text-sm outline-none transition focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 ${darkMode
+    ? "bg-slate-900 border-slate-600 text-white placeholder:text-slate-500"
+    : "bg-white border-slate-200 text-slate-800 placeholder:text-slate-400"
+    }`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,13 +143,12 @@ function SupportLegalContent() {
             key={sec.id}
             type="button"
             onClick={() => setActiveSection(sec.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition cursor-pointer ${
-              activeSection === sec.id
-                ? "bg-[#3B82F6] text-white border-[#3B82F6] shadow-md"
-                : darkMode
-                  ? "bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition cursor-pointer ${activeSection === sec.id
+              ? "bg-[#3B82F6] text-white border-[#3B82F6] shadow-md"
+              : darkMode
+                ? "bg-slate-800 text-slate-300 border-slate-600 hover:bg-slate-700"
+                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+              }`}
           >
             {sec.icon}
             <span>{sec.label}</span>
@@ -245,7 +243,7 @@ function SupportLegalContent() {
             )}
           </div>
 
-          <div className={`rounded-2xl border p-5 space-y-3 ${cardClass}`}>
+          {/* <div className={`rounded-2xl border p-5 space-y-3 ${cardClass}`}>
             <p className={`text-xs font-bold uppercase tracking-wider ${mutedClass}`}>{t.hotline}</p>
             <div className="flex items-center gap-3 text-sm">
               <Phone className="w-4 h-4 text-blue-500" />
@@ -253,9 +251,9 @@ function SupportLegalContent() {
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Mail className="w-4 h-4 text-blue-500" />
-              <span>support@communityconnect.local</span>
+              <span>[EMAIL_ADDRESS]</span>
             </div>
-          </div>
+          </div> */}
         </div>
       )}
 
