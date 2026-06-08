@@ -57,8 +57,10 @@ export default function DashboardPage() {
 
       const { data, error } = await supabase
         .from("reports")
-        .select("*")
+        .select("id, user_id, category_id, category_title, category_color, subcategory, description, contact, status, created_at")
         .order("created_at", { ascending: false });
+      
+      // Note: image field is excluded to reduce payload size. Fetch separately if needed for detail view.
 
       if (error) {
         console.error("Failed to fetch reports:", error.message);

@@ -59,9 +59,11 @@ export default function HistoryPage() {
 
         const { data, error: fetchError } = await supabase
           .from("reports")
-          .select("*")
+          .select("id, category_id, category_title, category_color, subcategory, description, contact, status, created_at")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
+        
+        // Note: image field is excluded to reduce payload size. Fetch separately if needed for detail view.
 
         if (fetchError) {
           console.error("Failed to load reports:", fetchError.message);
@@ -82,7 +84,7 @@ export default function HistoryPage() {
           subcategory: item.subcategory,
           description: item.description,
           contact: item.contact,
-          image: item.image,
+          image: item.image || null,
           status: item.status,
           timestamp: new Date(item.created_at).toLocaleString("th-TH"),
         }));
