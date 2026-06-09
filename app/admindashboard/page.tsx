@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSettings } from "@/app/components/SettingsProvider";
 import {
   Loader2,
   Image as ImageIcon,
@@ -9,24 +10,19 @@ import {
   Trash2,
   AlertCircle,
   X,
-  MapPin,
   Search,
-  Camera,
+  PlusCircle,
   CheckCircle,
+  Camera,
 } from "lucide-react";
-import CategoryCard from "@/app/components/categorycard";
-import { ICON_MAP } from "@/app/lib/icons";
-import type { Category } from "@/app/lib/types";
 import { createClient } from "@/app/lib/supabase";
-import { useSettings } from "@/app/components/SettingsProvider";
 import { compressImage } from "@/app/lib/image-utils";
 
 export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useSettings();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [categories, setCategories] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
   const [selectedReportForDetail, setSelectedReportForDetail] = useState<any>(null);
@@ -38,6 +34,7 @@ export default function DashboardPage() {
   const [savingCompletion, setSavingCompletion] = useState(false);
   const completionFileRef = useRef<HTMLInputElement>(null);
 
+  // โหลดข้อมูล Categories ไว้เฉพาะสำหรับใช้ในตัวกรองปุ่มด้านล่างเท่านั้น (ตัด UI การแสดงผลการ์ดออก)
   const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch("/api/categories?enabled=true");
@@ -47,8 +44,6 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error("Failed to fetch categories:", err);
-    } finally {
-      setLoadingCategories(false);
     }
   }, []);
 
@@ -81,8 +76,7 @@ export default function DashboardPage() {
   }, [fetchCategories, fetchReports]);
 
   useEffect(() => {
-    const reportId =
-      searchParams.get("report") || searchParams.get("reportId");
+    const reportId = searchParams.get("report") || searchParams.get("reportId");
     if (!reportId || reports.length === 0) return;
 
     const report = reports.find((r) => r.id === reportId);
@@ -147,9 +141,7 @@ export default function DashboardPage() {
       setReports(previousReports);
       setSelectedReportForDetail(previousDetail);
       alert(
-        language === "th"
-          ? "เกิดข้อผิดพลาดในการอัปเดตสถานะ"
-          : "Error updating status"
+        language === "th" ? "เกิดข้อผิดพลาดในการอัปเดตสถานะ" : "Error updating status"
       );
     }
   };
@@ -200,12 +192,8 @@ export default function DashboardPage() {
   };
 
   const pendingCount = reports.filter((r) => r.status === "รอดำเนินการ").length;
-  const processingCount = reports.filter(
-    (r) => r.status === "กำลังดำเนินการ"
-  ).length;
-  const infoRequestedCount = reports.filter(
-    (r) => r.status === "ขอข้อมูลเพิ่ม"
-  ).length;
+  const processingCount = reports.filter((r) => r.status === "กำลังดำเนินการ").length;
+  const infoRequestedCount = reports.filter((r) => r.status === "ขอข้อมูลเพิ่ม").length;
   const completedCount = reports.filter((r) => r.status === "เสร็จสิ้น").length;
 
   const getStatusClass = (status: string) => {
@@ -221,47 +209,33 @@ export default function DashboardPage() {
     }
   };
 
-  // Get unique categories that actually have reports in them
-  const uniqueCategoriesWithReports = reports.reduce((acc: { title: string; color: string }[], report) => {
-    if (report.category_title && !acc.some(c => c.title === report.category_title)) {
-      acc.push({
-        title: report.category_title,
-        color: report.category_color || "#64748B"
-      });
-    }
-    return acc;
-  }, []);
-
   const activeReports = reports.filter((r) => r.status !== "เสร็จสิ้น");
 
   const filteredReports = reports.filter((report) => {
-    // Completed reports only appear when the Completed filter is active
     if (!selectedStatusFilter && report.status === "เสร็จสิ้น") {
       return false;
     }
 
-    // 1. Search Query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchesSearch = (
+      const matchesSearch =
         (report.category_title || "").toLowerCase().includes(q) ||
         (report.subcategory || "").toLowerCase().includes(q) ||
         (report.description || "").toLowerCase().includes(q) ||
         (report.contact || "").toLowerCase().includes(q) ||
-        (report.status || "").toLowerCase().includes(q)
-      );
+        (report.status || "").toLowerCase().includes(q);
       if (!matchesSearch) return false;
     }
 
-    // 2. Status Filter
     if (selectedStatusFilter && report.status !== selectedStatusFilter) {
       return false;
     }
 
-    // 3. Category Filter
     if (selectedCategoryFilter) {
-      const matchedCategory = categories.find(c => c.id === selectedCategoryFilter);
-      const categoryName = matchedCategory ? `${matchedCategory.subtitle} (${matchedCategory.title})` : "";
+      const matchedCategory = categories.find((c) => c.id === selectedCategoryFilter);
+      const categoryName = matchedCategory
+        ? `${matchedCategory.subtitle} (${matchedCategory.title})`
+        : "";
 
       const matchesId = report.category_id === selectedCategoryFilter;
       const matchesTitle = categoryName && report.category_title === categoryName;
@@ -275,13 +249,11 @@ export default function DashboardPage() {
   });
 
   const t = {
-    title: language === "th" ? "แผงควบคุมหลัก" : "Admin Dashboard",
-    subtitle: language === "th" ? "จัดการหมวดหมู่บริการ และตรวจสอบสถานะรายการแจ้งเหตุจากคนในชุมชน" : "Manage service categories and monitor community incident reports",
+    title: language === "th" ? "แผงควบคุมหลักสำหรับผู้ดูแลระบบ" : "Admin Dashboard",
+    subtitle: language === "th" ? "ตรวจสอบสถานะ และจัดการรายการแจ้งเหตุจากคนในชุมชนเรียบไทม์" : "Monitor and manage community incident reports in real-time",
     loading: language === "th" ? "กำลังโหลด..." : "Loading...",
-    noCategory: language === "th" ? "ยังไม่มีหมวดหมู่ที่เปิดใช้งาน" : "No active categories",
-    goManage: language === "th" ? "ไปที่หน้า Issue Categories เพื่อเพิ่มหรือเปิดใช้งานหมวดหมู่" : "Go to Issue Categories to add or enable categories",
     realtimeSummary: language === "th" ? "สรุปสถานะเรียลไทม์" : "Real-time Summary",
-    realtimeDesc: language === "th" ? "ปริมาณปัญหาแยกตามขั้นตอนการดำเนินงาน" : "Report volume by status stage",
+    realtimeDesc: language === "th" ? "ปริมาณปัญหาแยกตามขั้นตอน" : "Report volume by stage",
     pending: language === "th" ? "รอดำเนินการ" : "Pending",
     processing: language === "th" ? "กำลังดำเนินการ" : "In Progress",
     infoRequested: language === "th" ? "ขอข้อมูลเพิ่ม" : "Info Requested",
@@ -296,68 +268,27 @@ export default function DashboardPage() {
   return (
     <>
       <div className="space-y-8">
-
+        {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <h1 className="text-3xl font-bold text-[#0F172A]">{t.title}</h1>
-            <p className="text-slate-500 mt-1.5">
-              {t.subtitle}
-            </p>
+            <p className="text-slate-500 mt-1.5">{t.subtitle}</p>
           </div>
         </div>
 
-        {loadingCategories ? (
-          <div className="flex items-center justify-center h-40">
-            <Loader2 className="w-7 h-7 text-slate-400 animate-spin" />
-          </div>
-        ) : categories.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map((cat) => {
-              const IconComponent = ICON_MAP[cat.iconName];
-              return (
-                <CategoryCard
-                  key={cat.id}
-                  title={`${cat.subtitle}\n(${cat.title})`}
-                  description={cat.description}
-                  icon={
-                    IconComponent ? (
-                      <IconComponent
-                        className="w-16 h-16"
-                        style={{ color: cat.color }}
-                      />
-                    ) : null
-                  }
-                  color={cat.color}
-                  subcategories={cat.subcategories}
-                  onClick={() => { }}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-8 text-center">
-            <p className="text-slate-400 text-sm">{t.noCategory}</p>
-            <p className="text-slate-300 text-xs mt-1">
-              {t.goManage}
-            </p>
-          </div>
-        )}
-
+        {/* Dashboard Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Real-time Status Counter */}
           <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 flex items-center justify-between border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-[#0F172A]">
-                  {t.realtimeSummary}
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {t.realtimeDesc}
-                </p>
+                <h3 className="text-lg font-bold text-[#0F172A]">{t.realtimeSummary}</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{t.realtimeDesc}</p>
               </div>
             </div>
             <div className="p-6 space-y-4 flex-1 flex flex-col justify-center">
               <button
-                onClick={() => setSelectedStatusFilter(prev => prev === "รอดำเนินการ" ? "" : "รอดำเนินการ")}
+                onClick={() => setSelectedStatusFilter((prev) => (prev === "รอดำเนินการ" ? "" : "รอดำเนินการ"))}
                 className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer text-left w-full ${selectedStatusFilter === "รอดำเนินการ"
                   ? "border-amber-500 bg-amber-100 ring-2 ring-amber-400/20 scale-[1.02] shadow-sm"
                   : "border-amber-100 bg-amber-50/50 hover:bg-amber-100/30"
@@ -369,13 +300,11 @@ export default function DashboardPage() {
                     {t.pending}
                   </span>
                 </div>
-                <span className="text-lg font-bold text-amber-700">
-                  {pendingCount}
-                </span>
+                <span className="text-lg font-bold text-amber-700">{pendingCount}</span>
               </button>
 
               <button
-                onClick={() => setSelectedStatusFilter(prev => prev === "กำลังดำเนินการ" ? "" : "กำลังดำเนินการ")}
+                onClick={() => setSelectedStatusFilter((prev) => (prev === "กำลังดำเนินการ" ? "" : "กำลังดำเนินการ"))}
                 className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer text-left w-full ${selectedStatusFilter === "กำลังดำเนินการ"
                   ? "border-blue-500 bg-blue-100 ring-2 ring-blue-400/20 scale-[1.02] shadow-sm"
                   : "border-blue-100 bg-blue-50/50 hover:bg-blue-100/30"
@@ -387,13 +316,11 @@ export default function DashboardPage() {
                     {t.processing}
                   </span>
                 </div>
-                <span className="text-lg font-bold text-blue-700">
-                  {processingCount}
-                </span>
+                <span className="text-lg font-bold text-blue-700">{processingCount}</span>
               </button>
 
               <button
-                onClick={() => setSelectedStatusFilter(prev => prev === "ขอข้อมูลเพิ่ม" ? "" : "ขอข้อมูลเพิ่ม")}
+                onClick={() => setSelectedStatusFilter((prev) => (prev === "ขอข้อมูลเพิ่ม" ? "" : "ขอข้อมูลเพิ่ม"))}
                 className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer text-left w-full ${selectedStatusFilter === "ขอข้อมูลเพิ่ม"
                   ? "border-purple-500 bg-purple-100 ring-2 ring-purple-400/20 scale-[1.02] shadow-sm"
                   : "border-purple-100 bg-purple-50/50 hover:bg-purple-100/30"
@@ -405,13 +332,11 @@ export default function DashboardPage() {
                     {t.infoRequested}
                   </span>
                 </div>
-                <span className="text-lg font-bold text-purple-700">
-                  {infoRequestedCount}
-                </span>
+                <span className="text-lg font-bold text-purple-700">{infoRequestedCount}</span>
               </button>
 
               <button
-                onClick={() => setSelectedStatusFilter(prev => prev === "เสร็จสิ้น" ? "" : "เสร็จสิ้น")}
+                onClick={() => setSelectedStatusFilter((prev) => (prev === "เสร็จสิ้น" ? "" : "เสร็จสิ้น"))}
                 className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer text-left w-full ${selectedStatusFilter === "เสร็จสิ้น"
                   ? "border-emerald-500 bg-emerald-100 ring-2 ring-emerald-400/20 scale-[1.02] shadow-sm"
                   : "border-emerald-100 bg-emerald-50/50 hover:bg-emerald-100/30"
@@ -423,9 +348,7 @@ export default function DashboardPage() {
                     {t.completed}
                   </span>
                 </div>
-                <span className="text-lg font-bold text-emerald-700">
-                  {completedCount}
-                </span>
+                <span className="text-lg font-bold text-emerald-700">{completedCount}</span>
               </button>
 
               {(selectedStatusFilter || selectedCategoryFilter) && (
@@ -442,6 +365,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Right Column: Reports Table and Filters */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-4">
@@ -496,7 +420,7 @@ export default function DashboardPage() {
                           backgroundColor: isActive ? cat.color : "transparent",
                           borderColor: isActive ? cat.color : "#E2E8F0",
                           color: isActive ? "#FFFFFF" : "#475569",
-                          boxShadow: isActive ? `0 2px 4px ${cat.color}33` : "none"
+                          boxShadow: isActive ? `0 2px 4px ${cat.color}33` : "none",
                         }}
                       >
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: isActive ? "#FFFFFF" : cat.color }} />
@@ -508,12 +432,13 @@ export default function DashboardPage() {
               )}
             </div>
 
+            {/* Incident Reports List */}
             {loadingReports ? (
               <div className="flex items-center justify-center h-48">
                 <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
               </div>
             ) : reports.length > 0 ? (
-              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1 mt-3">
                 {filteredReports.map((report) => (
                   <div
                     key={report.id}
@@ -545,11 +470,7 @@ export default function DashboardPage() {
                             {report.subcategory}
                           </span>
                         </div>
-                        <span
-                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getStatusClass(
-                            report.status
-                          )}`}
-                        >
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getStatusClass(report.status)}`}>
                           {report.status}
                         </span>
                       </div>
@@ -565,9 +486,7 @@ export default function DashboardPage() {
                           <span>|</span>
                           <span className="flex items-center">
                             <Calendar className="w-3 h-3 mr-0.5" />
-                            {new Date(report.created_at).toLocaleDateString(
-                              language === "th" ? "th-TH" : "en-US"
-                            )}
+                            {new Date(report.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
                           </span>
                           <span>|</span>
                           <button
@@ -580,9 +499,7 @@ export default function DashboardPage() {
 
                         <div className="flex items-center space-x-1 flex-wrap gap-y-1">
                           <button
-                            onClick={() =>
-                              handleUpdateStatus(report.id, "รอดำเนินการ")
-                            }
+                            onClick={() => handleUpdateStatus(report.id, "รอดำเนินการ")}
                             className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "รอดำเนินการ"
                               ? "bg-amber-100 border-amber-300 text-amber-800"
                               : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
@@ -591,9 +508,7 @@ export default function DashboardPage() {
                             {language === "th" ? "รอ" : "Wait"}
                           </button>
                           <button
-                            onClick={() =>
-                              handleUpdateStatus(report.id, "กำลังดำเนินการ")
-                            }
+                            onClick={() => handleUpdateStatus(report.id, "กำลังดำเนินการ")}
                             className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "กำลังดำเนินการ"
                               ? "bg-blue-100 border-blue-300 text-blue-800"
                               : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
@@ -602,9 +517,7 @@ export default function DashboardPage() {
                             {language === "th" ? "ทำอยู่" : "Doing"}
                           </button>
                           <button
-                            onClick={() =>
-                              handleUpdateStatus(report.id, "ขอข้อมูลเพิ่ม")
-                            }
+                            onClick={() => handleUpdateStatus(report.id, "ขอข้อมูลเพิ่ม")}
                             className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "ขอข้อมูลเพิ่ม"
                               ? "bg-purple-100 border-purple-300 text-purple-800"
                               : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
@@ -613,9 +526,7 @@ export default function DashboardPage() {
                             {language === "th" ? "ขอข้อมูล" : "Info"}
                           </button>
                           <button
-                            onClick={() =>
-                              handleUpdateStatus(report.id, "เสร็จสิ้น")
-                            }
+                            onClick={() => handleUpdateStatus(report.id, "เสร็จสิ้น")}
                             className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "เสร็จสิ้น"
                               ? "bg-emerald-100 border-emerald-300 text-emerald-800"
                               : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
@@ -647,15 +558,15 @@ export default function DashboardPage() {
                     ) : selectedStatusFilter === "เสร็จสิ้น" ? (
                       <>
                         <AlertCircle className="w-6 h-6 text-slate-300 mx-auto mb-2" />
-                        <p className="text-slate-400 text-xs">
-                          {language === "th" ? "ยังไม่มีรายการที่เสร็จสิ้น" : "No completed reports yet"}
-                        </p>
+                        <p className="text-slate-400 text-xs">{language === "th" ? "ยังไม่มีรายการที่เสร็จสิ้น" : "No completed reports yet"}</p>
                       </>
                     ) : (
                       <>
                         <AlertCircle className="w-6 h-6 text-slate-300 mx-auto mb-2" />
                         <p className="text-slate-400 text-xs">
-                          {language === "th" ? "ไม่มีรายการที่กำลังดำเนินการ — กด \"เสร็จสิ้น\" เพื่อดูงานที่ปิดแล้ว" : "No active reports — click \"Completed\" to view finished items"}
+                          {language === "th"
+                            ? 'ไม่มีรายการที่กำลังดำเนินการ — กด "เสร็จสิ้น" เพื่อดูงานที่ปิดแล้ว'
+                            : 'No active reports — click "Completed" to view finished items'}
                         </p>
                       </>
                     )}
@@ -665,9 +576,7 @@ export default function DashboardPage() {
             ) : (
               <div className="py-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
                 <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-400 text-xs">
-                  {language === "th" ? "ยังไม่มีรายงานแจ้งเข้ามาในระบบ" : "No reports submitted yet"}
-                </p>
+                <p className="text-slate-400 text-xs">{language === "th" ? "ยังไม่มีรายงานแจ้งเข้ามาในระบบ" : "No reports submitted yet"}</p>
               </div>
             )}
           </div>
@@ -677,36 +586,17 @@ export default function DashboardPage() {
       {/* Detail Modal */}
       {selectedReportForDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
-            onClick={() => setSelectedReportForDetail(null)}
-          />
-
-          {/* Modal Content Box */}
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]" onClick={() => setSelectedReportForDetail(null)} />
           <div className="relative bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 z-10 my-auto animate-[scaleUp_250ms_ease-out] flex flex-col md:flex-row gap-6 max-h-[90vh] overflow-y-auto">
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedReportForDetail(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
-            >
+            <button onClick={() => setSelectedReportForDetail(null)} className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer">
               <X className="w-5 h-5" />
             </button>
-
-            {/* Left side: Image */}
             <div className="w-full md:w-1/2 flex flex-col space-y-4">
               {selectedReportForDetail.image ? (
-                <img
-                  src={selectedReportForDetail.image}
-                  alt="Report detail preview"
-                  className="w-full h-64 object-cover rounded-2xl border border-slate-200 shadow-sm"
-                />
+                <img src={selectedReportForDetail.image} alt="Report detail preview" className="w-full h-64 object-cover rounded-2xl border border-slate-200 shadow-sm" />
               ) : (
                 <div className="w-full h-64 bg-slate-100 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-300">
                   <ImageIcon className="w-12 h-12 mb-2" />
-                  <span className="text-xs font-semibold text-slate-400">
-                    {language === "th" ? "ไม่มีรูปภาพแนบ" : "No image attached"}
-                  </span>
                 </div>
               )}
 
