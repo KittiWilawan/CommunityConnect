@@ -93,7 +93,7 @@ function ReportIssueForm() {
       } catch (err) {
         console.error("Failed to fetch categories:", err);
       } finally {
-        setLoading(false);
+        box_loading: setLoading(false);
       }
     };
     loadCategories();
@@ -188,7 +188,6 @@ function ReportIssueForm() {
     setSaving(true);
 
     try {
-      // Prepare image: if present, compress further to ensure it fits in the DB row
       let imageToStore: string | null = null;
       if (selectedImage) {
         try {
@@ -245,6 +244,7 @@ function ReportIssueForm() {
       setSaving(false);
     }
   };
+
   const resetForm = () => {
     setSelectedCategoryId("");
     setSelectedSubcategory("");
@@ -255,6 +255,7 @@ function ReportIssueForm() {
     setMapKey((k) => k + 1);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-3">
@@ -474,7 +475,8 @@ function ReportIssueForm() {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        // 🟢 เพิ่ม z-[9999] คลุมแท็กนอกสุด เพื่อบังคับให้ฉากหลังทั้งหมดอยู่เหนือแผนที่
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
@@ -482,6 +484,7 @@ function ReportIssueForm() {
           />
 
           {/* Modal Content Box */}
+          {/* 🟢 เปลี่ยนเป็น z-10 ธรรมดา เพราะกล่องแม่ z-[9999] คุมความสูงเบ็ดเสร็จไว้แล้ว */}
           <div className="relative bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-slate-100 z-10 my-auto animate-[scaleUp_250ms_ease-out]">
             <div className="mx-auto w-16 h-16 bg-emerald-50 text-[#2B7A3E] rounded-full flex items-center justify-center mb-4">
               <CheckCircle className="w-10 h-10" />

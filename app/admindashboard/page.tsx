@@ -109,10 +109,10 @@ export default function DashboardPage() {
       prev.map((r) =>
         r.id === reportId
           ? {
-              ...r,
-              status: newStatus,
-              ...(evidenceImage ? { completion_image: evidenceImage } : {}),
-            }
+            ...r,
+            status: newStatus,
+            ...(evidenceImage ? { completion_image: evidenceImage } : {}),
+          }
           : r
       )
     );
@@ -140,7 +140,7 @@ export default function DashboardPage() {
         setSelectedReportForDetail(previousDetail);
         alert(
           (language === "th" ? "ไม่สามารถอัปเดตสถานะได้: " : "Failed to update status: ") +
-            (body.error || res.statusText)
+          (body.error || res.statusText)
         );
       }
     } catch {

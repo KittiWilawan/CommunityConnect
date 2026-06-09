@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// ❌ ลบการ import L แบบปกติออกเพื่อไม่ให้เซิร์ฟเวอร์ตื่นตระหนก
-// import L from "leaflet"; 
 import "leaflet/dist/leaflet.css";
 import { Loader2 } from "lucide-react";
 import {
@@ -35,7 +33,6 @@ interface IncidentStatusMapProps {
   heightClass?: string;
 }
 
-// 🟢 ปรับฟังก์ชันสร้าง Icon ให้ปลอดภัย: ส่งผ่านตัวแปร L จากใน useEffect แทนการเรียกใช้ตรงๆ ทั่วโลก
 function createPinIcon(L: any, color: string) {
   return L.divIcon({
     className: "",
@@ -144,7 +141,6 @@ export default function IncidentStatusMap({
   }), [language]);
 
   const updateMarkers = useCallback(() => {
-    // 🟢 ถ้าตัวแปร L ยังไม่พร้อมทำงาน ให้ข้ามฟังก์ชันนี้ไปก่อนเพื่อความปลอดภัย
     if (!L) return;
 
     const map = mapRef.current;
@@ -209,7 +205,6 @@ export default function IncidentStatusMap({
   }, [filteredReports, language, t.viewHistory, L]);
 
   useEffect(() => {
-    // 🟢 ต้องมีตัวแปร L (Leaflet) ตื่นขึ้นมาก่อน ถึงจะเริ่มประกอบร่างสร้างแผนที่
     if (!mapContainerRef.current || mapRef.current || !L) return;
 
     const LEAFLET_MAX_BOUNDS = [
@@ -255,7 +250,6 @@ export default function IncidentStatusMap({
     return () => clearTimeout(timer);
   }, [heightClass]);
 
-  // 🟢 แสดงสถานะการโหลดชั่วคราวระหว่างรอแผนที่ตื่นตัวบนเบราว์เซอร์ เพื่อความปลอดภัย 100% ตอน Build
   if (!L) {
     return (
       <div className={`${heightClass} bg-slate-100 flex items-center justify-center`}>
@@ -290,7 +284,7 @@ export default function IncidentStatusMap({
           </div>
         )}
 
-        <div className="absolute top-3 left-3 z-[500] bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-md border border-slate-200/50 w-56 space-y-2">
+        <div className="absolute top-3 left-3 z-[10] bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-md border border-slate-200/50 w-56 space-y-2">
           <p className="text-[10px] text-slate-400 font-medium leading-snug">
             {t.filterHint}
           </p>
