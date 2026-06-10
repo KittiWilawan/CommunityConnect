@@ -21,7 +21,7 @@ const IncidentStatusMap = dynamic(
   }
 );
 
-interface ReportItem extends MapReportPin {}
+interface ReportItem extends MapReportPin { }
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -119,7 +119,7 @@ export default function DashboardPage() {
           <Loader2 className="w-7 h-7 text-slate-400 animate-spin" />
         </div>
       ) : categories.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full">
           {categories.map((cat) => {
             const IconComponent = ICON_MAP[cat.iconName];
             return (
