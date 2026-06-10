@@ -70,7 +70,7 @@ export default function DashboardLayout({
   return (
     <div className={`min-h-screen flex flex-col font-sans relative transition-colors duration-300 ${darkMode ? "bg-slate-900 text-slate-100" : "bg-slate-50 text-slate-800"}`}>
       <div className="flex-1 flex flex-col min-w-0">
-        <header className={`h-16 flex items-center justify-between px-6 md:px-8 shrink-0 relative z-25 border-b transition-colors duration-300 ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
+        <header className={`h-16 flex items-center justify-between px-4 md:px-8 shrink-0 relative z-[1010] border-b transition-colors duration-300 ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
           <Link href="/Dashboard" className={`text-xl font-bold ${darkMode ? "text-white" : "text-[#0F172A]"}`}>Community Connect</Link>
           <div className={`hidden md:flex items-center space-x-5 text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-600"}`}>
             <Link href="/reportissue" className={`transition ${pathname === "/reportissue" ? "text-[#3B82F6] font-semibold" : darkMode ? "hover:text-white" : "hover:text-slate-900"}`}>{tNav.report}</Link>
@@ -87,18 +87,65 @@ export default function DashboardLayout({
           <div className="flex md:hidden items-center space-x-2">
             <NotificationBell darkMode={darkMode} language={language} userRole={userRole} />
             <ProfileAvatar darkMode={darkMode} size="w-7 h-7" textSize="text-[10px]" />
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer focus:outline-none">{mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}</button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className={`p-1.5 rounded-lg transition cursor-pointer focus:outline-none ${darkMode ? "text-slate-300 hover:text-white hover:bg-slate-700" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </header>
+        {/* Mobile dropdown overlay */}
         {mobileMenuOpen && (
-          <div className={`md:hidden border-b shadow-lg absolute top-16 left-0 right-0 z-20 flex flex-col px-6 py-4 space-y-4 animate-[slideDown_200ms_ease-out] ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
-            <Link href="/reportissue" onClick={() => setMobileMenuOpen(false)} className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition ${pathname === "/reportissue" ? "bg-blue-50 text-[#3B82F6]" : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"}`}>{tNav.report}</Link>
-            <Link href="/reportissue/historys" onClick={() => setMobileMenuOpen(false)} className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition ${pathname === "/reportissue/historys" ? "bg-blue-50 text-[#3B82F6]" : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"}`}>{tNav.history}</Link>
-            <Link href="/reportissue/profile" onClick={() => setMobileMenuOpen(false)} className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition flex items-center space-x-2 ${pathname === "/reportissue/profile" ? "bg-blue-50 text-[#3B82F6]" : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"}`}><UserIcon className="w-4 h-4" /><span>{tNav.profile}</span></Link>
+          <div
+            className="fixed inset-0 z-[1008] md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+        {mobileMenuOpen && (
+          <div className={`md:hidden border-b shadow-xl fixed top-16 left-0 right-0 z-[1009] flex flex-col px-5 py-4 space-y-1 ${darkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
+            <Link
+              href="/reportissue"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-4 py-3 rounded-xl text-sm font-semibold transition ${pathname === "/reportissue"
+                ? "bg-blue-50 text-[#3B82F6]"
+                : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              {tNav.report}
+            </Link>
+            <Link
+              href="/reportissue/historys"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-4 py-3 rounded-xl text-sm font-semibold transition ${pathname === "/reportissue/historys"
+                ? "bg-blue-50 text-[#3B82F6]"
+                : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              {tNav.history}
+            </Link>
+            <Link
+              href="/reportissue/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-4 py-3 rounded-xl text-sm font-semibold transition flex items-center space-x-2 ${pathname === "/reportissue/profile"
+                ? "bg-blue-50 text-[#3B82F6]"
+                : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <UserIcon className="w-4 h-4" />
+              <span>{tNav.profile}</span>
+            </Link>
             {user && (
-              <div className={`pt-4 border-t flex flex-col space-y-3 ${darkMode ? "border-slate-700" : "border-slate-100"}`}>
+              <div className={`pt-3 mt-2 border-t flex flex-col space-y-2 ${darkMode ? "border-slate-700" : "border-slate-100"}`}>
                 <span className={`text-xs px-4 truncate ${darkMode ? "text-slate-400" : "text-slate-500"}`} title={user.email}>{user.email}</span>
-                <button type="button" onClick={() => { setMobileMenuOpen(false); handleSignOut(); }} className={getLogoutMobileButtonClass(darkMode)}><LogOut className="w-4 h-4" /><span>{tNav.logout}</span></button>
+                <button
+                  type="button"
+                  onClick={() => { setMobileMenuOpen(false); handleSignOut(); }}
+                  className={getLogoutMobileButtonClass(darkMode)}
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>{tNav.logout}</span>
+                </button>
               </div>
             )}
           </div>

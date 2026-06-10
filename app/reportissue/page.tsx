@@ -387,7 +387,6 @@ function ReportIssueForm() {
                   onChange={(e) => setSelectedSubcategory(e.target.value)}
                   disabled={
                     !selectedCategoryId ||
-                    subcategoriesList.length === 0 ||
                     saving
                   }
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 focus:bg-white transition cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed text-gray-900"
@@ -397,8 +396,6 @@ function ReportIssueForm() {
                     <option value="">
                       {t.selectMainFirstOpt}
                     </option>
-                  ) : subcategoriesList.length === 0 ? (
-                    <option value="">{t.noSubcategoryOpt}</option>
                   ) : (
                     <>
                       <option value="">{t.selectProblemOpt}</option>
@@ -407,6 +404,12 @@ function ReportIssueForm() {
                           {sub}
                         </option>
                       ))}
+                      {/* Always provide "อื่นๆ" option */}
+                      {!subcategoriesList.includes(language === "th" ? "อื่นๆ" : "Other") && (
+                        <option value={language === "th" ? "อื่นๆ" : "Other"}>
+                          {language === "th" ? "อื่นๆ (Other)" : "Other (อื่นๆ)"}
+                        </option>
+                      )}
                     </>
                   )}
                 </select>

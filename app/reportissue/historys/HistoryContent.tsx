@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,6 +21,8 @@ import {
   Loader2,
   CheckCircle,
   MapPin,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { useSettings } from "@/app/components/SettingsProvider";
 import { compressImage } from "@/app/lib/image-utils";
@@ -71,6 +73,10 @@ export default function HistoryContent() {
   const [editImage, setEditImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Map navigation state
+  const [activePinIndex, setActivePinIndex] = useState<number>(0);
+  const [mapKey, setMapKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -225,12 +231,16 @@ export default function HistoryContent() {
       language === "th" ? "แผนที่ตำแหน่งที่แจ้งเหตุ" : "Reported Locations Map",
     mapDesc:
       language === "th"
-        ? "จุดปักหมุดจากการแจ้งเหตุของคุณ กรองตามสถานะได้"
-        : "Pins from your reports, filterable by status",
+        ? "จุดปักหมุดจากการแจ้งเหตุของคุณ กดซ้าย/ขวาเพื่อดูแต่ละจุด"
+        : "Pins from your reports — use left/right to navigate between markers",
     issueLocation:
       language === "th" ? "ตำแหน่งที่เกิดปัญหา" : "Issue location",
     noLocation:
       language === "th" ? "ไม่มีข้อมูลตำแหน่ง" : "No location data",
+    prevPin: language === "th" ? "หมุดก่อนหน้า" : "Previous pin",
+    nextPin: language === "th" ? "หมุดถัดไป" : "Next pin",
+    pinOf: language === "th" ? "จุดที่" : "Pin",
+    of: language === "th" ? "จาก" : "of",
   };
 
   const handleDeleteReport = async (id: string) => {
@@ -304,16 +314,16 @@ export default function HistoryContent() {
           r.id === editingReport.id
             ? {
               ...r,
-              description: updated.description,
-              contact: updated.contact,
-              image: updated.image || null,
-              status: updated.status,
+              description: updated.description ?? r.description,
+              contact: updated.contact ?? r.contact,
+              image: updated.image !== undefined ? (updated.image || null) : r.image,
+              status: updated.status ?? r.status,
             }
             : r
         )
       );
       closeEditModal();
-    } catch {
+    } catch (err) {
       alert(
         language === "th"
           ? "เกิดข้อผิดพลาดในการบันทึก"
@@ -346,6 +356,34 @@ export default function HistoryContent() {
         })),
     [reports]
   );
+
+  // Navigate to previous pin
+  const goPrevPin = useCallback(() => {
+    if (mapReports.length === 0) return;
+    const newIndex = (activePinIndex - 1 + mapReports.length) % mapReports.length;
+    setActivePinIndex(newIndex);
+    // Scroll to corresponding report card
+    const pin = mapReports[newIndex];
+    if (pin) {
+      document.getElementById(`report-${pin.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedReportId(pin.id);
+      setTimeout(() => setHighlightedReportId(null), 2500);
+    }
+  }, [activePinIndex, mapReports]);
+
+  // Navigate to next pin
+  const goNextPin = useCallback(() => {
+    if (mapReports.length === 0) return;
+    const newIndex = (activePinIndex + 1) % mapReports.length;
+    setActivePinIndex(newIndex);
+    // Scroll to corresponding report card
+    const pin = mapReports[newIndex];
+    if (pin) {
+      document.getElementById(`report-${pin.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedReportId(pin.id);
+      setTimeout(() => setHighlightedReportId(null), 2500);
+    }
+  }, [activePinIndex, mapReports]);
 
   if (loading) {
     return (
@@ -381,6 +419,8 @@ export default function HistoryContent() {
       (report.status || "").toLowerCase().includes(q)
     );
   });
+
+  const currentPin = mapReports[activePinIndex];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -434,15 +474,86 @@ export default function HistoryContent() {
 
       {mapReports.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100">
-            <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
+          {/* Map header with navigation controls */}
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>
+              <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
+            </div>
+
+            {/* Pin navigation controls */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Current pin info */}
+              {currentPin && (
+                <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: currentPin.category_color }}
+                  />
+                  <span className="text-[10px] font-bold text-slate-600 max-w-[120px] truncate">
+                    {currentPin.subcategory}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    ({activePinIndex + 1}/{mapReports.length})
+                  </span>
+                </div>
+              )}
+
+              {/* Left button */}
+              <button
+                onClick={goPrevPin}
+                disabled={mapReports.length <= 1}
+                title={t.prevPin}
+                className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {/* Pin counter (mobile) */}
+              <span className="sm:hidden text-xs font-bold text-slate-500">
+                {activePinIndex + 1}/{mapReports.length}
+              </span>
+
+              {/* Right button */}
+              <button
+                onClick={goNextPin}
+                disabled={mapReports.length <= 1}
+                title={t.nextPin}
+                className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
+
+          {/* Map */}
           <IncidentStatusMap
+            key={`map-${mapKey}`}
             reports={mapReports}
             language={language}
             heightClass="h-72"
+            activeReportId={currentPin?.id}
           />
+
+          {/* Pin list (scrollable dots) */}
+          {mapReports.length > 1 && (
+            <div className="flex items-center justify-center gap-1.5 py-2 px-4 border-t border-slate-100">
+              {mapReports.map((pin, idx) => (
+                <button
+                  key={pin.id}
+                  onClick={() => {
+                    setActivePinIndex(idx);
+                    document.getElementById(`report-${pin.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    setHighlightedReportId(pin.id);
+                    setTimeout(() => setHighlightedReportId(null), 2500);
+                  }}
+                  title={pin.subcategory}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${idx === activePinIndex ? "scale-150" : "opacity-50 hover:opacity-80"}`}
+                  style={{ backgroundColor: pin.category_color }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

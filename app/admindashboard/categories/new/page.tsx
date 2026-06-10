@@ -339,6 +339,17 @@ export default function NewCategoryPage() {
                                 <Plus className="w-5 h-5" />
                             </button>
                         </div>
+                        {/* Quick-add "อื่นๆ" button */}
+                        {!subcategories.includes("อื่นๆ") && !subcategories.includes("Other") && (
+                            <button
+                                type="button"
+                                onClick={() => setSubcategories((prev) => [...prev, "อื่นๆ"])}
+                                className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50 transition cursor-pointer"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                เพิ่ม &quot;อื่นๆ&quot; อัตโนมัติ (แนะนำ)
+                            </button>
+                        )}
 
                         {subcategories.length > 0 ? (
                             <div className="flex flex-wrap gap-2.5 pt-2">

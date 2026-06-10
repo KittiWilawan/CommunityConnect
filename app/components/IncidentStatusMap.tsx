@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import {
   BANGKOK_BOUNDS,
   BANGKOK_CENTER,
@@ -31,6 +31,7 @@ interface IncidentStatusMapProps {
   language: "th" | "en";
   className?: string;
   heightClass?: string;
+  activeReportId?: string;
 }
 
 function createPinIcon(L: any, color: string) {
@@ -65,6 +66,7 @@ export default function IncidentStatusMap({
   language,
   className = "",
   heightClass = "h-80",
+  activeReportId,
 }: IncidentStatusMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null); // เปลี่ยนจาก L.Map เป็น any เพื่อเลี่ยงการตรวจของประเภทข้อมูล
@@ -76,6 +78,7 @@ export default function IncidentStatusMap({
   const [activeStatuses, setActiveStatuses] = useState<Set<string>>(
     () => new Set(REPORT_STATUSES)
   );
+  const [filterCollapsed, setFilterCollapsed] = useState(true);
 
   // 🟢 ดึงข้อมูล Leaflet เข้ามาทำงานใน UseEffect (รันเฉพาะฝั่ง Client แน่นอน 100%)
   useEffect(() => {
@@ -160,6 +163,7 @@ export default function IncidentStatusMap({
       const marker = L.marker(latlng, {
         icon: createPinIcon(L, getStatusColor(report.status)), // ส่ง L เข้าไปทำงานด้วย
       });
+      (marker as any).reportId = report.id;
 
       const dateStr = new Date(report.created_at).toLocaleString(
         language === "th" ? "th-TH" : "en-US"
@@ -250,6 +254,27 @@ export default function IncidentStatusMap({
     return () => clearTimeout(timer);
   }, [heightClass]);
 
+  useEffect(() => {
+    if (!L || !mapRef.current || !activeReportId) return;
+    const activeReport = reports.find((r) => r.id === activeReportId);
+    if (activeReport && hasValidCoords(activeReport)) {
+      mapRef.current.setView([activeReport.latitude, activeReport.longitude], 16, {
+        animate: true,
+      });
+
+      if (markersLayerRef.current) {
+        const timer = setTimeout(() => {
+          markersLayerRef.current.eachLayer((layer: any) => {
+            if (layer.reportId === activeReportId) {
+              layer.openPopup();
+            }
+          });
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [activeReportId, reports, L]);
+
   if (!L) {
     return (
       <div className={`${heightClass} bg-slate-100 flex items-center justify-center`}>
@@ -284,57 +309,86 @@ export default function IncidentStatusMap({
           </div>
         )}
 
-        <div className="absolute top-3 left-3 z-[10] bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-md border border-slate-200/50 w-56 space-y-2">
-          <p className="text-[10px] text-slate-400 font-medium leading-snug">
-            {t.filterHint}
-          </p>
-          {REPORT_STATUSES.map((status) => {
-            const active = activeStatuses.has(status);
-            const color = getStatusColor(status);
-            return (
-              <div key={status} className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => toggleStatus(status)}
-                  className={`flex-1 flex items-center space-x-2 text-left rounded-lg px-2 py-1.5 transition cursor-pointer ${active
-                    ? "bg-slate-50 ring-1 ring-slate-200"
-                    : "opacity-40 hover:opacity-60"
-                    }`}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-xs font-medium text-slate-700 truncate">
-                    {getStatusLabel(status, language)}
-                  </span>
-                  <span className="text-xs font-bold text-slate-500 ml-auto">
-                    {statusCounts[status] ?? 0}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => showOnlyStatus(status)}
-                  title={
-                    language === "th"
-                      ? `แสดงเฉพาะ${status}`
-                      : `Show only ${getStatusLabel(status, language)}`
-                  }
-                  className="text-[9px] font-bold text-slate-400 hover:text-blue-600 px-1.5 py-1 rounded border border-slate-200 hover:border-blue-200 transition cursor-pointer shrink-0"
-                >
-                  {language === "th" ? "เฉพาะ" : "Only"}
-                </button>
-              </div>
-            );
-          })}
-          {!allActive && (
+        <div className="absolute top-3 left-3 z-[10] bg-white/95 backdrop-blur-sm rounded-xl shadow-md border border-slate-200/50 transition-all duration-200">
+          {filterCollapsed ? (
             <button
               type="button"
-              onClick={resetFilters}
-              className="w-full text-[10px] font-bold text-blue-600 hover:text-blue-800 pt-1 cursor-pointer"
+              onClick={() => setFilterCollapsed(false)}
+              className="p-2 flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-700 hover:text-blue-600 transition rounded-xl cursor-pointer"
+              title={language === "th" ? "แสดงตัวกรอง" : "Show filters"}
             >
-              {t.showAll}
+              <Filter className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-[10px] font-bold">{language === "th" ? "ตัวกรองสถานะ" : "Filters"}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
+          ) : (
+            <div className="p-3 w-56 space-y-2">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-blue-600" />
+                  {language === "th" ? "ตัวกรองสถานะ" : "Status Filters"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFilterCollapsed(true)}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                  title={language === "th" ? "ซ่อนตัวกรอง" : "Hide filters"}
+                >
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400 font-medium leading-snug">
+                {t.filterHint}
+              </p>
+              {REPORT_STATUSES.map((status) => {
+                const active = activeStatuses.has(status);
+                const color = getStatusColor(status);
+                return (
+                  <div key={status} className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleStatus(status)}
+                      className={`flex-1 flex items-center space-x-2 text-left rounded-lg px-2 py-1.5 transition cursor-pointer ${active
+                        ? "bg-slate-50 ring-1 ring-slate-200"
+                        : "opacity-40 hover:opacity-60"
+                        }`}
+                    >
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-xs font-medium text-slate-700 truncate">
+                        {getStatusLabel(status, language)}
+                      </span>
+                      <span className="text-xs font-bold text-slate-500 ml-auto">
+                        {statusCounts[status] ?? 0}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => showOnlyStatus(status)}
+                      title={
+                        language === "th"
+                          ? `แสดงเฉพาะ${status}`
+                          : `Show only ${getStatusLabel(status, language)}`
+                      }
+                      className="text-[9px] font-bold text-slate-400 hover:text-blue-600 px-1.5 py-1 rounded border border-slate-200 hover:border-blue-200 transition cursor-pointer shrink-0"
+                    >
+                      {language === "th" ? "เฉพาะ" : "Only"}
+                    </button>
+                  </div>
+                );
+              })}
+              {!allActive && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="w-full text-[10px] font-bold text-blue-600 hover:text-blue-800 pt-1 cursor-pointer text-center"
+                >
+                  {t.showAll}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

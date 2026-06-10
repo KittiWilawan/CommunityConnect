@@ -18,6 +18,8 @@ import {
   PlusCircle,
   CheckCircle,
   Camera,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { createClient } from "@/app/lib/supabase";
 import { compressImage } from "@/app/lib/image-utils";
@@ -37,6 +39,7 @@ export default function DashboardPage() {
   const [completionImage, setCompletionImage] = useState<string | null>(null);
   const [savingCompletion, setSavingCompletion] = useState(false);
   const completionFileRef = useRef<HTMLInputElement>(null);
+  const [mapExpanded, setMapExpanded] = useState(false);
 
   interface MapReportPin {
     id: string;
@@ -345,16 +348,26 @@ export default function DashboardPage() {
         {mapReports.length > 0 && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             {/* หัวข้อแผงควบคุมแผนที่ */}
-            <div className="p-5 border-b border-slate-100">
-              <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>
-              <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
+              </div>
+              <button
+                onClick={() => setMapExpanded((prev) => !prev)}
+                title={mapExpanded ? (language === "th" ? "ย่อแผนที่" : "Collapse map") : (language === "th" ? "ขยายแผนที่" : "Expand map")}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold transition active:scale-95 cursor-pointer shrink-0"
+              >
+                {mapExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                <span className="hidden sm:inline">{mapExpanded ? (language === "th" ? "ย่อ" : "Collapse") : (language === "th" ? "ขยาย" : "Expand")}</span>
+              </button>
             </div>
 
             {/* ตัว Component แผนที่ตัวจริงที่รับค่าพิกัดไปวาดลงแผนที่ */}
             <IncidentStatusMap
               reports={mapReports}
               language={language}
-              heightClass="h-72"
+              heightClass={mapExpanded ? "h-[500px]" : "h-64"}
             />
           </div>
         )}
@@ -523,14 +536,14 @@ export default function DashboardPage() {
                 <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
               </div>
             ) : reports.length > 0 ? (
-              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1 mt-3">
+              <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1 mt-3">
                 {filteredReports.map((report) => (
                   <div
                     key={report.id}
-                    className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 flex gap-3 items-start hover:shadow-sm transition"
+                    className="p-2 bg-white rounded-xl border border-slate-200/80 flex gap-2 items-start hover:shadow-md hover:border-slate-300 transition-all duration-200"
                   >
                     {report.image ? (
-                      <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-slate-200 shadow-sm aspect-square">
+                      <div className="w-8 h-8 rounded-md overflow-hidden shrink-0 border border-slate-200 shadow-sm aspect-square">
                         <img
                           src={report.image}
                           alt="Preview"
@@ -538,90 +551,81 @@ export default function DashboardPage() {
                         />
                       </div>
                     ) : (
-                      <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 aspect-square shadow-inner">
-                        <ImageIcon className="w-4 h-4 text-slate-400" />
+                      <div className="w-8 h-8 bg-slate-50 rounded-md flex items-center justify-center text-slate-400 shrink-0 border border-slate-200 aspect-square shadow-inner">
+                        <ImageIcon className="w-3 h-3 text-slate-400" />
                       </div>
                     )}
-                    <div className="flex-grow min-w-0 space-y-1.5">
+                    <div className="flex-grow min-w-0 space-y-1">
+                      {/* Row 1: Category badge + subcategory + status */}
                       <div className="flex flex-wrap items-center justify-between gap-1">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <span
-                            className="text-[9px] font-bold px-2 py-0.5 rounded text-white"
+                            className="text-[8px] font-bold px-1.5 py-0.5 rounded text-white shrink-0"
                             style={{ backgroundColor: report.category_color }}
                           >
                             {report.category_title}
                           </span>
-                          <span className="text-[11px] font-bold text-slate-600 truncate max-w-[120px]">
+                          <span className="text-[9px] font-bold text-slate-700 truncate max-w-[100px]">
                             {report.subcategory}
                           </span>
                         </div>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${getStatusClass(report.status)}`}>
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full border shrink-0 ${getStatusClass(report.status)}`}>
                           {report.status}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-700 break-words whitespace-pre-wrap leading-relaxed">
+
+                      {/* Row 2: Description */}
+                      <p className="text-[9px] text-slate-600 line-clamp-2 leading-relaxed">
                         {report.description}
                       </p>
 
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-[9px] text-slate-400 pt-1.5 border-t border-slate-200/50">
-                        <div className="flex items-center space-x-2">
-                          <span>
-                            {language === "th" ? "ผู้แจ้ง: " : "Reporter: "}{report.contact || (language === "th" ? "ไม่ได้ระบุชื่อ" : "Anonymous")}
+                      {/* Row 3: Location */}
+                      {(report.location_address || (report.latitude && report.longitude)) && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-2.5 h-2.5 text-[#C92A2A] shrink-0" />
+                          <span className="text-[8px] text-slate-500 truncate">
+                            {report.location_address ||
+                              (report.latitude != null && report.longitude != null
+                                ? `${Number(report.latitude).toFixed(4)}, ${Number(report.longitude).toFixed(4)}`
+                                : "")}
                           </span>
-                          <span>|</span>
-                          <span className="flex items-center">
-                            <Calendar className="w-3 h-3 mr-0.5" />
+                        </div>
+                      )}
+
+                      {/* Row 4: Meta + actions */}
+                      <div className="flex items-center justify-between gap-1 text-[8px] text-slate-400 pt-1 border-t border-slate-100">
+                        <div className="flex items-center gap-1">
+                          <span>
+                            {language === "th" ? "ผู้แจ้ง: " : "By: "}<span className="text-slate-600 font-medium">{report.contact || (language === "th" ? "ไม่ระบุ" : "Anon")}</span>
+                          </span>
+                          <span>·</span>
+                          <span className="flex items-center gap-0.5">
+                            <Calendar className="w-2 h-2" />
                             {new Date(report.created_at).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
                           </span>
-                          <span>|</span>
+                          <span>·</span>
                           <button
                             onClick={() => setSelectedReportForDetail(report)}
-                            className="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer hover:underline animate-pulse"
+                            className="text-blue-600 hover:text-blue-800 font-bold cursor-pointer hover:underline"
                           >
                             {language === "th" ? "ดูรายละเอียด" : "Details"}
                           </button>
                         </div>
 
-                        <div className="flex items-center space-x-1 flex-wrap gap-y-1">
-                          <button
-                            onClick={() => handleUpdateStatus(report.id, "รอดำเนินการ")}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "รอดำเนินการ"
-                              ? "bg-amber-100 border-amber-300 text-amber-800"
-                              : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
-                              }`}
+                        <div className="flex items-center gap-1">
+                          <select
+                            value={report.status}
+                            onChange={(e) => handleUpdateStatus(report.id, e.target.value)}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold border cursor-pointer outline-none transition duration-150 ${getStatusClass(report.status)}`}
                           >
-                            {language === "th" ? "รอ" : "Wait"}
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(report.id, "กำลังดำเนินการ")}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "กำลังดำเนินการ"
-                              ? "bg-blue-100 border-blue-300 text-blue-800"
-                              : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
-                              }`}
-                          >
-                            {language === "th" ? "ทำอยู่" : "Doing"}
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(report.id, "ขอข้อมูลเพิ่ม")}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "ขอข้อมูลเพิ่ม"
-                              ? "bg-purple-100 border-purple-300 text-purple-800"
-                              : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
-                              }`}
-                          >
-                            {language === "th" ? "ขอข้อมูล" : "Info"}
-                          </button>
-                          <button
-                            onClick={() => handleUpdateStatus(report.id, "เสร็จสิ้น")}
-                            className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition cursor-pointer ${report.status === "เสร็จสิ้น"
-                              ? "bg-emerald-100 border-emerald-300 text-emerald-800"
-                              : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
-                              }`}
-                          >
-                            {language === "th" ? "เสร็จ" : "Done"}
-                          </button>
+                            <option value="รอดำเนินการ">{language === "th" ? "รอดำเนินการ" : "Pending"}</option>
+                            <option value="กำลังดำเนินการ">{language === "th" ? "กำลังดำเนินการ" : "In Progress"}</option>
+                            <option value="ขอข้อมูลเพิ่ม">{language === "th" ? "ขอข้อมูลเพิ่ม" : "Req Info"}</option>
+                            <option value="เสร็จสิ้น">{language === "th" ? "เสร็จสิ้น" : "Completed"}</option>
+                          </select>
                           <button
                             onClick={() => handleDeleteReport(report.id)}
-                            className="p-1 text-slate-300 hover:text-red-600 transition cursor-pointer ml-0.5"
+                            className="p-0.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
                             title={language === "th" ? "ลบรายการ" : "Delete"}
                           >
                             <Trash2 className="w-3 h-3" />
@@ -757,6 +761,19 @@ export default function DashboardPage() {
                       )}
                     </span>
                   </div>
+                  {/* Location */}
+                  {(selectedReportForDetail.location_address || (selectedReportForDetail.latitude && selectedReportForDetail.longitude)) && (
+                    <div className="flex items-start gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-[#C92A2A] shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{language === "th" ? "ตำแหน่งที่เกิดเหตุ" : "Issue Location"}</p>
+                        <p className="text-xs text-slate-600 leading-relaxed break-words">
+                          {selectedReportForDetail.location_address ||
+                            `${Number(selectedReportForDetail.latitude).toFixed(5)}, ${Number(selectedReportForDetail.longitude).toFixed(5)}`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
