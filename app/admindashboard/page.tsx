@@ -21,6 +21,8 @@ import {
   Camera,
   Maximize2,
   Minimize2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { createClient } from "@/app/lib/supabase";
 import { compressImage } from "@/app/lib/image-utils";
@@ -41,10 +43,13 @@ export default function DashboardPage() {
   const [savingCompletion, setSavingCompletion] = useState(false);
   const completionFileRef = useRef<HTMLInputElement>(null);
   const [mapExpanded, setMapExpanded] = useState(false);
-
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [activePinIndex, setActivePinIndex] = useState<number>(0);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectingReportId, setRejectingReportId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'admin' | 'user'>('admin');
 
-  interface MapReportPin {
+  interface MapReportPinLocal {
     id: string;
     latitude: number;
     longitude: number;
@@ -56,6 +61,7 @@ export default function DashboardPage() {
     description: string;
     created_at: string;
   }
+
   const IncidentStatusMap = dynamic(
     () => import("@/app/components/IncidentStatusMap"),
     {
@@ -63,7 +69,8 @@ export default function DashboardPage() {
       loading: () => <IncidentStatusMapLoading heightClass="h-72" />,
     }
   );
-  const mapReports: MapReportPin[] = useMemo(
+
+  const mapReports: MapReportPinLocal[] = useMemo(
     () =>
       reports
         .filter(
@@ -75,19 +82,16 @@ export default function DashboardPage() {
           id: r.id,
           latitude: r.latitude as number,
           longitude: r.longitude as number,
-          location_address: r.locationAddress,
+          location_address: r.location_address,
           status: r.status,
           subcategory: r.subcategory,
-          category_title: r.categoryTitle,
-          category_color: r.categoryColor,
+          category_title: r.category_title,
+          category_color: r.category_color,
           description: r.description,
-          created_at: r.createdAt,
+          created_at: r.created_at,
         })),
     [reports]
   );
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectingReportId, setRejectingReportId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'admin' | 'user'>('admin');
 
   const handleRejectReport = async (reportId: string, reason: string) => {
     try {
@@ -106,7 +110,6 @@ export default function DashboardPage() {
         return;
       }
 
-      // Send notification to report owner
       const report = reports.find((r) => r.id === reportId);
       if (report && report.user_id) {
         await supabase.from("notifications").insert({
@@ -136,7 +139,7 @@ export default function DashboardPage() {
       alert("เกิดข้อผิดพลาดในการปฎิเสธ");
     }
   };
-  // โหลดข้อมูล Categories ไว้เฉพาะสำหรับใช้ในตัวกรองปุ่มด้านล่างเท่านั้น (ตัด UI การแสดงผลการ์ดออก)
+
   const fetchCategories = useCallback(async () => {
     try {
       const res = await fetch("/api/categories?enabled=true");
@@ -324,12 +327,10 @@ export default function DashboardPage() {
   const activeReports = reports.filter((r) => r.status !== "เสร็จสิ้น");
 
   const filteredReports = reports.filter((report) => {
-    // 0. View Mode Filter
     if (viewMode === 'user' && currentUserId) {
       if (report.user_id !== currentUserId) return false;
     }
 
-    // 1. Search Query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchesSearch = (
@@ -342,12 +343,10 @@ export default function DashboardPage() {
       if (!matchesSearch) return false;
     }
 
-    // 2. Status Filter
     if (selectedStatusFilter && report.status !== selectedStatusFilter) {
       return false;
     }
 
-    // 3. Category Filter
     if (selectedCategoryFilter) {
       const matchedCategory = categories.find(c => c.id === selectedCategoryFilter);
       const categoryName = matchedCategory ? `${matchedCategory.subtitle} (${matchedCategory.title})` : "";
@@ -378,25 +377,12 @@ export default function DashboardPage() {
     searchPlaceholder: language === "th" ? "ค้นหารายการแจ้งเหตุ..." : "Search reports...",
     filterCategory: language === "th" ? "หมวดหมู่:" : "Category:",
     filterAll: language === "th" ? "ทั้งหมด (All)" : "All",
-    mapTitle:
-
-      language === "th" ? "แผนที่ตำแหน่งที่แจ้งเหตุ" : "Reported Locations Map",
-
-    mapDesc:
-
-      language === "th"
-
-        ? "จุดปักหมุดจากการแจ้งเหตุของคุณ กรองตามสถานะได้"
-
-        : "Pins from your reports, filterable by status",
-
-    issueLocation:
-
-      language === "th" ? "ตำแหน่งที่เกิดปัญหา" : "Issue location",
-
-    noLocation:
-
-      language === "th" ? "ไม่มีข้อมูลตำแหน่ง" : "No location data",
+    mapTitle: language === "th" ? "แผนที่ตำแหน่งที่แจ้งเหตุ" : "Reported Locations Map",
+    mapDesc: language === "th" ? "จุดปักหมุดจากการแจ้งเหตุของคุณ กรองตามสถานะได้" : "Pins from your reports, filterable by status",
+    issueLocation: language === "th" ? "ตำแหน่งที่เกิดปัญหา" : "Issue location",
+    noLocation: language === "th" ? "ไม่มีข้อมูลตำแหน่ง" : "No location data",
+    prevPin: language === "th" ? "หมุดก่อนหน้า" : "Previous pin",
+    nextPin: language === "th" ? "หมุดถัดไป" : "Next pin",
   };
 
   return (
@@ -434,14 +420,66 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Map Section */}
         {mapReports.length > 0 && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            {/* หัวข้อแผงควบคุมแผนที่ */}
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3">
+            {/* Map header with navigation controls */}
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
               <div>
                 <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>
                 <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
               </div>
+
+              {/* Pin navigation controls */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Current pin info */}
+                {mapReports.length > 0 && (
+                  <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: mapReports[activePinIndex]?.category_color }}
+                    />
+                    <span className="text-[10px] font-bold text-slate-600 max-w-[120px] truncate">
+                      {mapReports[activePinIndex]?.subcategory}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      ({activePinIndex + 1}/{mapReports.length})
+                    </span>
+                  </div>
+                )}
+
+                {/* Left button */}
+                <button
+                  onClick={() => {
+                    const newIndex = (activePinIndex - 1 + mapReports.length) % mapReports.length;
+                    setActivePinIndex(newIndex);
+                  }}
+                  disabled={mapReports.length <= 1}
+                  title={t.prevPin}
+                  className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {/* Pin counter (mobile) */}
+                <span className="sm:hidden text-xs font-bold text-slate-500">
+                  {activePinIndex + 1}/{mapReports.length}
+                </span>
+
+                {/* Right button */}
+                <button
+                  onClick={() => {
+                    const newIndex = (activePinIndex + 1) % mapReports.length;
+                    setActivePinIndex(newIndex);
+                  }}
+                  disabled={mapReports.length <= 1}
+                  title={t.nextPin}
+                  className="flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
               <button
                 onClick={() => setMapExpanded((prev) => !prev)}
                 title={mapExpanded ? (language === "th" ? "ย่อแผนที่" : "Collapse map") : (language === "th" ? "ขยายแผนที่" : "Expand map")}
@@ -452,15 +490,33 @@ export default function DashboardPage() {
               </button>
             </div>
 
-
-            {/* ตัว Component แผนที่ตัวจริงที่รับค่าพิกัดไปวาดลงแผนที่ */}
+            {/* Map */}
             <IncidentStatusMap
               reports={mapReports}
               language={language}
               heightClass={mapExpanded ? "h-[500px]" : "h-64"}
+              activeReportId={mapReports[activePinIndex]?.id}
             />
+
+            {/* Pin list (scrollable dots) */}
+            {mapReports.length > 1 && (
+              <div className="flex items-center justify-center gap-1.5 py-2 px-4 border-t border-slate-100">
+                {mapReports.map((pin, idx) => (
+                  <button
+                    key={pin.id}
+                    onClick={() => {
+                      setActivePinIndex(idx);
+                    }}
+                    title={pin.subcategory}
+                    className={`w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${idx === activePinIndex ? "scale-150" : "opacity-50 hover:opacity-80"}`}
+                    style={{ backgroundColor: pin.category_color }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
+
         {/* Dashboard Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -1023,6 +1079,15 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Reject Modal */}
+      <RejectModal
+        isOpen={showRejectModal}
+        reportId={rejectingReportId || ""}
+        onClose={() => setShowRejectModal(false)}
+        onConfirm={(reason) => handleRejectReport(rejectingReportId || "", reason)}
+        language={language}
+      />
     </>
   );
 }
