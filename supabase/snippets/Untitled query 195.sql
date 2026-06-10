@@ -1,4 +1,2 @@
-ALTER TABLE public.reports 
-ADD COLUMN IF NOT EXISTS rejection_reason TEXT,
-ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS admin_view_mode BOOLEAN DEFAULT FALSE;
+SELECT * FROM pg_policies 
+WHERE tablename = 'reports';
