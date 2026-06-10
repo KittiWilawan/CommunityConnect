@@ -162,6 +162,29 @@ export async function DELETE(request: NextRequest) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { data: existingReport, error: reportError } = await supabase
+    .from("reports")
+    .select("id, user_id")
+    .eq("id", id)
+    .single();
+
+  if (reportError || !existingReport) {
+    return Response.json({ error: "Report not found" }, { status: 404 });
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = profile?.role === "admin";
+  const isOwner = existingReport.user_id === user.id;
+
+  if (!isAdmin && !isOwner) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const { error } = await supabase.from("reports").delete().eq("id", id);
 
   if (error) {

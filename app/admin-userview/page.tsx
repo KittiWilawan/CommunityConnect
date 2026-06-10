@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { normalizeRole } from "@/app/lib/roles";
 import UserDashboardPage from "@/app/Dashboard/page";
 
@@ -44,5 +45,9 @@ export default function AdminUserViewPage() {
 
   if (!allowed) return null;
 
-  return <UserDashboardPage />;
+  return (
+    <div>
+      <UserDashboardPage />
+    </div>
+  );
 }

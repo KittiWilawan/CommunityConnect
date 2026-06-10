@@ -334,20 +334,51 @@ export default function DashboardPage() {
 
     if (confirm(confirmMsg)) {
       try {
-        const supabase = createClient();
-        const { error } = await supabase
-          .from("reports")
-          .delete()
-          .eq("id", reportId);
+        const controller = new AbortController();
+        const timeoutMs = 20000;
+        let timeoutId: number | undefined;
 
-        if (error) {
-          alert("ไม่สามารถลบรายงานได้: " + error.message);
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = window.setTimeout(() => {
+            try {
+              controller.abort();
+            } catch {
+              // ignore
+            }
+            reject(new Error("timeout"));
+          }, timeoutMs);
+        });
+
+        const res = (await Promise.race([
+          fetch(`/api/reports?id=${encodeURIComponent(reportId)}`, {
+            method: "DELETE",
+            signal: controller.signal,
+          }),
+          timeoutPromise,
+        ])) as Response;
+
+        if (timeoutId) window.clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          alert(
+            (language === "th" ? "ไม่สามารถลบรายงานได้: " : "Failed to delete report: ") +
+              (body.error || res.statusText)
+          );
           return;
         }
 
         setReports((prev) => prev.filter((r) => r.id !== reportId));
       } catch (err: any) {
-        alert("เกิดข้อผิดพลาดในการลบรายการ");
+        if (err?.name === "AbortError" || err?.message === "timeout") {
+          alert(
+            language === "th"
+              ? "การลบใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง"
+              : "Delete request timed out. Please try again."
+          );
+        } else {
+          alert(language === "th" ? "เกิดข้อผิดพลาดในการลบรายการ" : "Error deleting report");
+        }
       }
     }
   };
@@ -803,6 +834,15 @@ export default function DashboardPage() {
                           >
                             <X className="w-3 h-3" />
                           </button>
+                          {report.status === "ปฎิเสธ" && (
+                            <button
+                              onClick={() => handleDeleteReport(report.id)}
+                              className="p-1 text-slate-300 hover:text-red-600 transition cursor-pointer ml-0.5"
+                              title={language === "th" ? "ลบรายการที่ถูกปฎิเสธ" : "Delete rejected report"}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
