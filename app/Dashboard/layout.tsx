@@ -95,7 +95,6 @@ export default function DashboardLayout({
             Community Connect
           </Link>
 
-          {/* Desktop Navigation */}
           <div className={`hidden md:flex items-center space-x-5 text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
             <Link
               href="/reportissue"
@@ -133,7 +132,6 @@ export default function DashboardLayout({
             )}
           </div>
 
-          {/* Mobile Toggle & Bell */}
           <div className="flex md:hidden items-center space-x-2">
             <NotificationBell darkMode={darkMode} language={language} userRole={userRole} />
             <ProfileAvatar darkMode={darkMode} size="w-7 h-7" textSize="text-[10px]" />
@@ -148,7 +146,6 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
           <div className={`md:hidden border-b shadow-lg absolute top-16 left-0 right-0 z-20 flex flex-col px-6 py-4 space-y-4 animate-[slideDown_200ms_ease-out] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
             <Link

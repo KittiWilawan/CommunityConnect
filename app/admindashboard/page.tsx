@@ -137,7 +137,7 @@ export default function DashboardPage() {
         const body = await res.json().catch(() => ({}));
         alert(
           (language === "th" ? "ไม่สามารถปฎิเสธรายการได้: " : "Failed to reject report: ") +
-            (body.error || res.statusText)
+          (body.error || res.statusText)
         );
         return;
       }
@@ -154,11 +154,11 @@ export default function DashboardPage() {
           prev.map((r) =>
             r.id === reportId
               ? {
-                  ...r,
-                  status: "ปฎิเสธ",
-                  rejection_reason: reason,
-                  rejected_at: new Date().toISOString(),
-                }
+                ...r,
+                status: "ปฎิเสธ",
+                rejection_reason: reason,
+                rejected_at: new Date().toISOString(),
+              }
               : r
           )
         );
@@ -363,7 +363,7 @@ export default function DashboardPage() {
           const body = await res.json().catch(() => ({}));
           alert(
             (language === "th" ? "ไม่สามารถลบรายงานได้: " : "Failed to delete report: ") +
-              (body.error || res.statusText)
+            (body.error || res.statusText)
           );
           return;
         }
@@ -404,7 +404,6 @@ export default function DashboardPage() {
   const activeReports = reports.filter((r) => r.status !== "เสร็จสิ้น");
 
   const filteredReports = reports.filter((report) => {
-    // ซ่อนรายการที่ "เสร็จสิ้น" อัตโนมัติ จนกว่าจะเลือกดูจากตัวกรอง
     if (!selectedStatusFilter && report.status === "เสร็จสิ้น") {
       return false;
     }

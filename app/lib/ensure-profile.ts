@@ -35,11 +35,15 @@ export async function ensureProfile(
     .single();
 
   if (existing) {
-    // Update only empty fields (don't overwrite user-edited data)
     const updates: Record<string, unknown> = {};
     if (!existing.email && user.email) updates.email = user.email;
     if (!existing.display_name && displayName) updates.display_name = displayName;
     if (!existing.avatar_url && avatarUrl) updates.avatar_url = avatarUrl;
+
+    const metaRole = meta.role === "normaluser" ? "member" : meta.role;
+    if (metaRole && (metaRole === "admin" || metaRole === "member") && existing.role !== metaRole) {
+      updates.role = metaRole;
+    }
 
     if (Object.keys(updates).length > 0) {
       await supabase
@@ -59,7 +63,7 @@ export async function ensureProfile(
         id: user.id,
         email: user.email,
         phone,
-        role: "member",
+        role: meta.role === "admin" ? "admin" : "member",
         display_name: displayName,
         avatar_url: avatarUrl,
       },
