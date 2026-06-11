@@ -118,7 +118,7 @@ export default function ProfilePage() {
     displayNameLabel: language === 'th' ? 'ชื่อที่แสดง' : 'Display Name',
     addressLabel: language === 'th' ? 'ที่อยู่' : 'Address',
     bioLabel: language === 'th' ? 'เกี่ยวกับตัวฉัน' : 'About Me',
-    
+
     secAccount: language === 'th' ? 'บัญชีและการตั้งค่า' : 'ACCOUNT SETTINGS',
     editProfile: language === 'th' ? 'แก้ไขข้อมูลส่วนตัว' : 'Edit Profile',
     editProfileDesc: language === 'th' ? 'แก้ไขรูปโปรไฟล์ ชื่อ และข้อมูลติดต่อ' : 'Edit avatar, name and contact details',
@@ -169,10 +169,8 @@ export default function ProfilePage() {
 
   return (
     <div className={`max-w-2xl mx-auto space-y-6 pb-12 transition-all duration-300 ${fontSizeClass} ${darkMode ? 'text-white bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl' : 'text-slate-700'}`}>
-      
-      {/* Profile Card */}
+
       <div className={`rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden transition-colors ${getContrastClass('card')}`}>
-        {/* Avatar with Camera overlay */}
         <div className="relative mb-4 group">
           {profile?.avatar_url ? (
             <div className="w-28 h-28 rounded-full overflow-hidden flex items-center justify-center shrink-0 border-4 border-white shadow-lg">
@@ -207,14 +205,12 @@ export default function ProfilePage() {
           {t.verified}
         </p>
 
-        {/* Bio */}
         {profile?.bio && (
           <p className={`mt-3 max-w-md leading-relaxed ${darkMode ? 'text-slate-300' : 'text-slate-500'} ${subSizeClass}`}>
             {profile.bio}
           </p>
         )}
-        
-        {/* User Details Grid */}
+
         <div className={`w-full mt-6 pt-6 border-t grid grid-cols-2 gap-4 text-left ${getContrastClass('border')}`}>
           <div>
             <span className={`${subSizeClass} text-slate-400 block`}>Email</span>
@@ -251,13 +247,11 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Admin Panel Quick Access */}
         {profile?.role === 'admin' && (
-          <Link 
-            href="/admindashboard" 
-            className={`w-full mt-6 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-bold transition duration-200 ${
-              darkMode ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-md' : 'bg-[#0F172A] text-white hover:bg-slate-800'
-            }`}
+          <Link
+            href="/admindashboard"
+            className={`w-full mt-6 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-bold transition duration-200 ${darkMode ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-md' : 'bg-[#0F172A] text-white hover:bg-slate-800'
+              }`}
           >
             <Settings className="w-4 h-4" />
             <span>{t.adminPanel}</span>
@@ -265,7 +259,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Account Settings Section */}
       <div className="space-y-3">
         <h3 className={`font-bold uppercase tracking-wider px-1 ${subSizeClass} ${darkMode ? 'text-sky-400' : 'text-slate-500'}`}>
           {t.secAccount}
@@ -302,7 +295,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Accessibility Section */}
       <div className="space-y-3">
         <h3 className={`font-bold uppercase tracking-wider px-1 ${subSizeClass} ${darkMode ? 'text-sky-400' : 'text-slate-500'}`}>
           {t.secAccessibility}
@@ -326,11 +318,10 @@ export default function ProfilePage() {
                 onChange={() => setLargeText(!largeText)}
                 className="sr-only peer"
               />
-              <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full ${
-                darkMode 
-                  ? 'bg-slate-700 border border-slate-600 peer-checked:bg-sky-600' 
-                  : 'bg-slate-200 peer-checked:bg-sky-600'
-              }`}></div>
+              <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full ${darkMode
+                ? 'bg-slate-700 border border-slate-600 peer-checked:bg-sky-600'
+                : 'bg-slate-200 peer-checked:bg-sky-600'
+                }`}></div>
             </label>
           </div>
 
@@ -351,17 +342,15 @@ export default function ProfilePage() {
                 onChange={() => setDarkMode(!darkMode)}
                 className="sr-only peer"
               />
-              <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full ${
-                darkMode 
-                  ? 'bg-slate-700 border border-slate-600 peer-checked:bg-sky-600' 
-                  : 'bg-slate-200 peer-checked:bg-sky-600'
-              }`}></div>
+              <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full ${darkMode
+                ? 'bg-slate-700 border border-slate-600 peer-checked:bg-sky-600'
+                : 'bg-slate-200 peer-checked:bg-sky-600'
+                }`}></div>
             </label>
           </div>
         </div>
       </div>
 
-      {/* Support Section */}
       <div className="space-y-3">
         <h3 className={`font-bold uppercase tracking-wider px-1 ${subSizeClass} ${darkMode ? 'text-sky-400' : 'text-slate-500'}`}>
           {t.secSupport}
@@ -409,14 +398,12 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Logout Button */}
-      <button 
+      <button
         onClick={handleSignOut}
-        className={`w-full font-bold text-sm py-4 rounded-2xl transition duration-200 flex items-center justify-center space-x-2 border cursor-pointer ${
-          darkMode 
-            ? 'bg-red-950/40 hover:bg-red-950/60 text-[#FCA5A5] border-red-900/50' 
-            : 'bg-[#FCE8E6] hover:bg-[#FAD4D0] text-[#C92A2A] border-[#F8B4AC]'
-        }`}
+        className={`w-full font-bold text-sm py-4 rounded-2xl transition duration-200 flex items-center justify-center space-x-2 border cursor-pointer ${darkMode
+          ? 'bg-red-950/40 hover:bg-red-950/60 text-[#FCA5A5] border-red-900/50'
+          : 'bg-[#FCE8E6] hover:bg-[#FAD4D0] text-[#C92A2A] border-[#F8B4AC]'
+          }`}
       >
         <LogOut className="w-4 h-4" />
         <span>{t.logout}</span>

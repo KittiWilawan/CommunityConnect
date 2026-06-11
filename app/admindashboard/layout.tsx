@@ -32,6 +32,12 @@ export default function DashboardLayout({
                     const profileData = await profileRes.json();
                     setProfile(profileData);
                     setUser({ email: profileData.email, id: profileData.id });
+                    if (normalizeRole(profileData.role) !== "admin") {
+                        router.push("/Dashboard");
+                    }
+                    return;
+                } else if (profileRes.status === 401) {
+                    router.push("/");
                     return;
                 }
             } catch {
@@ -42,15 +48,23 @@ export default function DashboardLayout({
             try {
                 const supabase = createClient();
                 const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (!authUser) {
+                    router.push("/");
+                    return;
+                }
                 setUser(authUser);
-                setProfile({ role: authUser?.user_metadata?.role || "member" });
+                const role = authUser?.user_metadata?.role || "member";
+                setProfile({ role });
+                if (normalizeRole(role) !== "admin") {
+                    router.push("/Dashboard");
+                }
             } catch {
-                // ignore
+                router.push("/");
             }
         };
 
         loadHeaderData();
-    }, []);
+    }, [router]);
 
     const userRole = normalizeRole(profile?.role);
     const isAdmin = userRole === "admin";

@@ -80,11 +80,9 @@ export default function HistoryContent() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Map navigation state
   const [activePinIndex, setActivePinIndex] = useState<number>(0);
   const [mapKey, setMapKey] = useState(0);
 
-  // View mode state
   const [viewMode, setViewMode] = useState<'admin' | 'user'>('user');
   const [userRole, setUserRole] = useState<"admin" | "member">("member");
 
@@ -93,7 +91,6 @@ export default function HistoryContent() {
 
     const fetchReports = async () => {
       try {
-        // Load profile first (id + role) to support admin/user view switching.
         const profileRes = await fetch("/api/profile");
         if (profileRes.status === 401) {
           router.replace("/");
@@ -452,7 +449,6 @@ export default function HistoryContent() {
   }
 
   const filteredReports = reports.filter((report) => {
-    // Search query filter
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -479,9 +475,6 @@ export default function HistoryContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-
-
-          {/* Search Bar */}
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -521,7 +514,6 @@ export default function HistoryContent() {
 
       {mapReports.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          {/* Map header with navigation controls */}
           <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
             <div className="min-w-0">
               <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>

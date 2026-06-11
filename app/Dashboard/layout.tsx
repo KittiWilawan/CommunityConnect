@@ -31,18 +31,31 @@ export default function DashboardLayout({
           const profileData = await profileRes.json();
           setProfile(profileData);
           setUser({ email: profileData.email, id: profileData.id });
+          if (normalizeRole(profileData.role) === "admin") {
+            router.push("/admindashboard");
+          }
+          return;
         }
       } catch {
+        // ignore & fallback
+      }
+
+      try {
         const supabase = createClient();
         const { data: { user: authUser } } = await supabase.auth.getUser();
         setUser(authUser);
-        // Fallback: allow admin controls to show even if /api/profile fails
-        setProfile({ role: authUser?.user_metadata?.role || "member" });
+        const role = authUser?.user_metadata?.role || "member";
+        setProfile({ role });
+        if (normalizeRole(role) === "admin") {
+          router.push("/admindashboard");
+        }
+      } catch {
+        // ignore
       }
     };
 
     loadHeaderData();
-  }, []);
+  }, [router]);
 
   const handleSignOut = async () => {
     if (!confirm(language === "th" ? "คุณต้องการออกจากระบบใช่หรือไม่?" : "Are you sure you want to log out?")) {

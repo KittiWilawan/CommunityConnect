@@ -36,6 +36,7 @@ const LoginCard = () => {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: "profile openid email",
         },
       });
 
@@ -59,6 +60,7 @@ const LoginCard = () => {
         provider: "line" as any,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: "profile openid email",
         },
       });
 
