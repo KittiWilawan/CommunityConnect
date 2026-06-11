@@ -76,6 +76,7 @@ export default function DashboardLayout({
         }
         return baseClass + (darkMode ? "text-slate-300 hover:bg-slate-700 hover:text-white" : "text-slate-600 hover:bg-slate-200 hover:text-slate-900");
     };
+
     const handleSignOut = async () => {
         if (!confirm(language === "th" ? "คุณต้องการออกจากระบบใช่หรือไม่?" : "Are you sure you want to log out?")) {
             return;
@@ -152,8 +153,6 @@ export default function DashboardLayout({
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
-
-            {/* Mobile Sidebar Content */}
             <aside
                 className={`fixed inset-y-0 left-0 w-64 border-r flex flex-col pt-6 z-[1009] transition-all duration-300 md:hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-[#EEF2F6] border-slate-200'} ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
@@ -209,22 +208,19 @@ export default function DashboardLayout({
                     <Link
                         href="/reportissue"
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${darkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`}
-                    >
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${darkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`}>
                         <span>{tNav.report}</span>
                     </Link>
                     <Link
                         href="/reportissue/historys"
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${darkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`}
-                    >
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${darkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`}>
                         <span>{tNav.history}</span>
                     </Link>
                     <Link
                         href="/reportissue/profile"
                         onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${darkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`}
-                    >
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition ${darkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'}`}>
                         <UserIcon className="w-5 h-5" />
                         <span>{tNav.profile}</span>
                     </Link>

@@ -26,6 +26,7 @@ const BangkokLocationPicker = dynamic(
   }
 );
 
+// Compress image to JPEG at reduced quality/size to stay within Supabase row limits
 function compressImage(dataUrl: string, maxWidth = 800, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -79,7 +80,7 @@ function ReportIssueForm() {
           const data = await res.json();
           if (Array.isArray(data)) {
             setCategories(data);
-
+            // Pre-select category if parameter is valid
             if (categoryParam) {
               const found = data.find((c: Category) => c.id === categoryParam);
               if (found) {
@@ -108,6 +109,7 @@ function ReportIssueForm() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file size (max 5MB before compression)
       if (file.size > 5 * 1024 * 1024) {
         alert(language === "th" ? "ไฟล์รูปภาพต้องมีขนาดไม่เกิน 5MB" : "Image file must be under 5MB");
         return;

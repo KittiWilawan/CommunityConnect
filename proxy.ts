@@ -48,11 +48,16 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
-    return NextResponse.redirect(url);
+    // Clear any potentially stale session cookies
+    const response = NextResponse.redirect(url);
+    response.cookies.delete("sb-access-token");
+    response.cookies.delete("sb-refresh-token");
+    return response;
   }
 
   // Role-based protection when logged in
   if (user) {
+    // Admins are redirected to /admindashboard if visiting normal user dashboard or root
     if (
       role === "admin" &&
       (pathname === "/" || pathname.startsWith("/Dashboard"))
@@ -77,6 +82,10 @@ export async function proxy(request: NextRequest) {
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone();
     url.pathname = role === "admin" ? "/admindashboard" : "/Dashboard";
+    // Avoid redirecting if we are already where we need to be
+    if (pathname === url.pathname) {
+      return response;
+    }
     return NextResponse.redirect(url);
   }
 
