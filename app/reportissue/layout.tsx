@@ -25,6 +25,10 @@ export default function DashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    console.log("ReportIssue Layout state:", { user: user?.email, profile: profile?.display_name });
+  }, [user, profile]);
+
+  useEffect(() => {
     const loadHeaderData = async () => {
       try {
         const profileRes = await fetch("/api/profile");
