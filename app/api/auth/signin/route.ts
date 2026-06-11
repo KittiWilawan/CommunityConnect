@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/app/lib/supabase-server";
 import { normalizeRole } from "@/app/lib/roles";
+import { ensureProfile } from "@/app/lib/ensure-profile";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,14 +21,11 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: error.message }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
+    // Ensure profile row exists (handles edge case where trigger failed)
+    const profile = await ensureProfile(supabase, data.user);
 
     const role = normalizeRole(
-      profile?.role || data.user.user_metadata?.role
+      (profile?.role as string | undefined) || data.user.user_metadata?.role
     );
 
     return Response.json({ role });

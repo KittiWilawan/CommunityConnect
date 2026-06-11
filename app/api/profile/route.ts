@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/app/lib/supabase-server";
+import { ensureProfile } from "@/app/lib/ensure-profile";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -26,6 +27,13 @@ export async function GET(request: NextRequest) {
     .single();
 
   if (profileError) {
+    // Profile row missing — ensure it exists (fixes OAuth trigger failures)
+    const ensured = await ensureProfile(supabase, user);
+    if (ensured) {
+      return Response.json(ensured);
+    }
+
+    // Ultimate fallback from auth metadata
     return Response.json({
       id: user.id,
       email: user.email,

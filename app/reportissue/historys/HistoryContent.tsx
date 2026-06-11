@@ -83,7 +83,7 @@ export default function HistoryContent() {
   const [activePinIndex, setActivePinIndex] = useState<number>(0);
   const [mapKey, setMapKey] = useState(0);
 
-  const [viewMode, setViewMode] = useState<'admin' | 'user'>('user');
+  const [viewMode, setViewMode] = useState<'admin' | 'user'>('admin');
   const [userRole, setUserRole] = useState<"admin" | "member">("member");
 
   useEffect(() => {
@@ -475,6 +475,30 @@ export default function HistoryContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {userRole === "admin" && (
+            <div className="flex items-center bg-slate-100 rounded-xl p-1 shrink-0">
+              <button
+                onClick={() => setViewMode("user")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  viewMode === "user"
+                    ? "bg-white text-slate-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {t.userView}
+              </button>
+              <button
+                onClick={() => setViewMode("admin")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  viewMode === "admin"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {t.adminView}
+              </button>
+            </div>
+          )}
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input

@@ -145,22 +145,6 @@ const Register = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-1.5" htmlFor="role">
-              ประเภทผู้ใช้งาน <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-sky-200 focus:border-sky-300 transition text-gray-900 bg-white"
-              disabled={loading}
-            >
-              <option value="member">สมาชิก (Member)</option>
-              <option value="admin">ผู้ดูแลระบบ (Admin)</option>
-            </select>
-          </div>
-
           <button
             type="submit"
             className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 rounded-lg transition duration-200 mt-2 shadow-md flex items-center justify-center cursor-pointer disabled:opacity-50 font-bold"

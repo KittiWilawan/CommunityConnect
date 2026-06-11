@@ -1,9 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SiLine, SiGoogle } from "react-icons/si";
 import { createClient } from "@/app/lib/supabase";
 import { redirectAfterAuth, signInWithEmail } from "@/app/lib/auth-session";
+import {
+  initLiff,
+  isLiffConfigured,
+  isInLiffClient,
+  isLiffLoggedIn,
+  getLiffIdToken,
+} from "@/app/lib/liff";
 
 const LoginCard = () => {
   const [email, setEmail] = useState("");
@@ -11,6 +18,59 @@ const LoginCard = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [liffReady, setLiffReady] = useState(false);
+  const [liffAutoLogin, setLiffAutoLogin] = useState(false);
+
+  // Initialize LIFF on mount — if running inside LINE, auto-login
+  useEffect(() => {
+    if (!isLiffConfigured()) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await initLiff();
+        if (cancelled) return;
+        setLiffReady(true);
+
+        // If running inside LINE in-app browser and user is logged in → auto-login
+        if (isInLiffClient() && isLiffLoggedIn()) {
+          setLiffAutoLogin(true);
+          setLoading(true);
+
+          const idToken = getLiffIdToken();
+          if (idToken) {
+            const res = await fetch("/api/auth/liff", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken }),
+            });
+
+            const body = await res.json().catch(() => ({}));
+
+            if (res.ok && body.role) {
+              redirectAfterAuth(body.role);
+              return;
+            }
+          }
+
+          // Auto-login failed — fall back to normal login
+          setLiffAutoLogin(false);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setLiffReady(false);
+          setLiffAutoLogin(false);
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +115,26 @@ const LoginCard = () => {
     setError(null);
 
     try {
+      // If LIFF is ready and we're in LINE client, use LIFF login
+      if (liffReady && isInLiffClient()) {
+        const idToken = getLiffIdToken();
+        if (idToken) {
+          const res = await fetch("/api/auth/liff", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken }),
+          });
+
+          const body = await res.json().catch(() => ({}));
+
+          if (res.ok && body.role) {
+            redirectAfterAuth(body.role);
+            return;
+          }
+        }
+      }
+
+      // Fallback: use standard Supabase OAuth flow for LINE
       const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "line" as any,
@@ -73,6 +153,39 @@ const LoginCard = () => {
       setLoading(false);
     }
   };
+
+  // Show loading screen when LIFF auto-login is in progress
+  if (liffAutoLogin) {
+    return (
+      <div className="bg-white p-10 rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md flex flex-col items-center justify-center min-h-[200px]">
+        <div className="flex items-center space-x-3">
+          <svg
+            className="animate-spin h-6 w-6 text-green-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          <span className="text-gray-700 font-semibold">
+            กำลังเข้าสู่ระบบผ่าน LINE...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white p-10 rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md">

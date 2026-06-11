@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase-server";
 import { normalizeRole } from "@/app/lib/roles";
 import { getAuthDestination } from "@/app/lib/auth-session";
+import { ensureProfile } from "@/app/lib/ensure-profile";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -23,13 +24,13 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
+        // Ensure profile row exists (fixes OAuth users whose trigger failed)
+        const profile = await ensureProfile(supabase, user);
 
-        const role = normalizeRole(profile?.role || user.user_metadata?.role);
+        const role = normalizeRole(
+          profile?.role as string | undefined ||
+          user.user_metadata?.role
+        );
         const dest = getAuthDestination(role);
         return NextResponse.redirect(`${origin}${dest}`);
       }

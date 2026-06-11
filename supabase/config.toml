@@ -336,14 +336,16 @@ email_optional = false
 
 [auth.external.google]
 enabled = true
-client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
-secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+client_id = "644743417478-hob9084hhi4u42dof81v4qrtr9og29k5.apps.googleusercontent.com"
+secret = "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"
+redirect_uri = "http://localhost:54321/auth/v1/callback"
 skip_nonce_check = true
 
 [auth.external.line]
 enabled = true
-client_id = "env(SUPABASE_AUTH_EXTERNAL_LINE_CLIENT_ID)"
-secret = "env(SUPABASE_AUTH_EXTERNAL_LINE_SECRET)"
+client_id = "2010369514"
+secret = "ae4de890ceac1b35fbe04c2a0d6f17fd"
+redirect_uri = "http://localhost:54321/auth/v1/callback"
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.
