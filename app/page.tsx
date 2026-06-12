@@ -21,16 +21,11 @@ const App = async () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-between p-6 md:p-12 text-gray-900 font-sans">
-      {/* 2-Column Layout */}
       <main className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        {/* Left Column (Info Panel) */}
         <div className="flex flex-col items-start space-y-8">
-          {/* User Login Tag */}
           <span className="bg-sky-100 text-sky-700 text-xs font-semibold px-4 py-1 rounded-full">
             เข้าสู่ระบบผู้ใช้งาน
           </span>
-
-          {/* Main Headline */}
           <h1 className="text-3xl md:text-4xl font-bold leading-snug">
             เชื่อมต่อ ชุมชน สู่การ
             <br />

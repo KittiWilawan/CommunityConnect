@@ -184,6 +184,7 @@ export default function DashboardLayout({
                         <span>{tNav.dashboard}</span>
                     </Link>
 
+
                     <Link
                         href="/admindashboard/categories"
                         onClick={() => setSidebarOpen(false)}

@@ -86,6 +86,12 @@ export default function DashboardLayout({
                     {/* Desktop Navigation */}
                     <div className={`hidden md:flex items-center space-x-5 text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
                         <Link
+                            href="/adminlogin"
+                            className={`transition ${pathname === '/adminlogin' ? 'text-[#3B82F6] font-semibold' : darkMode ? 'hover:text-white' : 'hover:text-slate-900'}`}
+                        >
+                            Admin Login
+                        </Link>
+                        <Link
                             href="/admindashboard"
                             className={`transition ${pathname === '/admindashboard' ? 'text-[#3B82F6] font-semibold' : darkMode ? 'hover:text-white' : 'hover:text-slate-900'}`}
                         >

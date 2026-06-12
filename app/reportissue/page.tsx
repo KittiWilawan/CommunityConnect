@@ -109,7 +109,6 @@ function ReportIssueForm() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file size (max 5MB before compression)
       if (file.size > 5 * 1024 * 1024) {
         alert(language === "th" ? "ไฟล์รูปภาพต้องมีขนาดไม่เกิน 5MB" : "Image file must be under 5MB");
         return;
@@ -117,7 +116,6 @@ function ReportIssueForm() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const raw = reader.result as string;
-        // Compress image before storing
         const compressed = await compressImage(raw, 800, 0.7);
         setSelectedImage(compressed);
       };
