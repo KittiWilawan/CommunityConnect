@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { SiLine, SiGoogle } from "react-icons/si";
+import { SiGoogle } from "react-icons/si";
 import { createClient } from "@/app/lib/supabase";
 import { redirectAfterAuth, signInWithEmail } from "@/app/lib/auth-session";
 import {
@@ -10,6 +10,7 @@ import {
   isInLiffClient,
   isLiffLoggedIn,
   getLiffIdToken,
+  liffLogin,
 } from "@/app/lib/liff";
 
 const LoginCard = () => {
@@ -20,10 +21,17 @@ const LoginCard = () => {
   const [error, setError] = useState<string | null>(null);
   const [liffReady, setLiffReady] = useState(false);
   const [liffAutoLogin, setLiffAutoLogin] = useState(false);
+  const [checkingLiff, setCheckingLiff] = useState(false);
 
   useEffect(() => {
     if (!isLiffConfigured()) return;
 
+    const isLineApp = /Line\//i.test(navigator.userAgent);
+    if (!isLineApp) {
+      return;
+    }
+
+    setCheckingLiff(true);
     let cancelled = false;
 
     (async () => {
@@ -32,35 +40,65 @@ const LoginCard = () => {
         if (cancelled) return;
         setLiffReady(true);
 
-        if (isInLiffClient() && isLiffLoggedIn()) {
+        if (isLiffLoggedIn()) {
           setLiffAutoLogin(true);
           setLoading(true);
 
           const idToken = getLiffIdToken();
           if (idToken) {
-            const res = await fetch("/api/auth/liff", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ idToken }),
-            });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-            const body = await res.json().catch(() => ({}));
+            try {
+              const res = await fetch("/api/auth/liff", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "ngrok-skip-browser-warning": "true",
+                },
+                body: JSON.stringify({ idToken }),
+                signal: controller.signal,
+              });
+              clearTimeout(timeoutId);
 
-            if (res.ok && body.role) {
-              redirectAfterAuth(body.role);
-              return;
+              const body = await res.json().catch(() => ({}));
+              if (res.ok && body.role) {
+                redirectAfterAuth(body.role);
+                return;
+              } else {
+                throw new Error(body.error || `API Error: ${res.status}`);
+              }
+            } catch (fetchErr: any) {
+              clearTimeout(timeoutId);
+              throw new Error(`การเชื่อมต่อเซิร์ฟเวอร์ล้มเหลว: ${fetchErr.message}`);
             }
+          } else {
+            throw new Error("ไม่สามารถดึงข้อมูล Token จาก LINE ได้");
           }
-
-          // Auto-login failed — fall back to normal login
-          setLiffAutoLogin(false);
-          setLoading(false);
+        } else if (isInLiffClient()) {
+          setLiffAutoLogin(true);
+          liffLogin();
+          setTimeout(() => {
+            if (!cancelled) {
+              const msg = "LINE Login ไม่ตอบสนอง กรุณาลองใหม่อีกครั้ง";
+              setError(msg);
+              window.alert(msg);
+              setCheckingLiff(false);
+              setLiffAutoLogin(false);
+            }
+          }, 5000);
+        } else {
+          setCheckingLiff(false);
         }
-      } catch {
+      } catch (err: any) {
         if (!cancelled) {
+          const errMsg = err?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับ LINE";
+          setError(errMsg);
+          window.alert(errMsg);
           setLiffReady(false);
           setLiffAutoLogin(false);
           setLoading(false);
+          setCheckingLiff(false);
         }
       }
     })();
@@ -108,48 +146,8 @@ const LoginCard = () => {
     }
   };
 
-  const handleLineLogin = async () => {
-    setLoading(true);
-    setError(null);
 
-    try {
-      if (liffReady && isInLiffClient()) {
-        const idToken = getLiffIdToken();
-        if (idToken) {
-          const res = await fetch("/api/auth/liff", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken }),
-          });
-
-          const body = await res.json().catch(() => ({}));
-
-          if (res.ok && body.role) {
-            redirectAfterAuth(body.role);
-            return;
-          }
-        }
-      }
-
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: "line" as any,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (authError) {
-        setError(authError.message);
-        setLoading(false);
-      }
-    } catch (err: any) {
-      setError(err.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE");
-      setLoading(false);
-    }
-  };
-
-  if (liffAutoLogin) {
+  if (liffAutoLogin || checkingLiff) {
     return (
       <div className="bg-white p-10 rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md flex flex-col items-center justify-center min-h-[200px]">
         <div className="flex items-center space-x-3">
@@ -174,7 +172,7 @@ const LoginCard = () => {
             />
           </svg>
           <span className="text-gray-700 font-semibold">
-            กำลังเข้าสู่ระบบผ่าน LINE...
+            {checkingLiff && !liffAutoLogin ? "กำลังตรวจสอบข้อมูลจาก LINE..." : "กำลังเข้าสู่ระบบผ่าน LINE..."}
           </span>
         </div>
       </div>
@@ -196,15 +194,6 @@ const LoginCard = () => {
       )}
 
       <div className="space-y-4 mb-8">
-        <button
-          onClick={handleLineLogin}
-          className="w-full flex items-center justify-center space-x-3 bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2.5 rounded-lg transition duration-200 cursor-pointer"
-          disabled={loading}
-        >
-          <SiLine className="w-6 h-6" />
-          <span>เข้าสู่ระบบด้วย LINE</span>
-        </button>
-
         <button
           onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-100 text-gray-700 font-medium px-6 py-2.5 rounded-lg border border-gray-300 transition duration-200 shadow-sm cursor-pointer"

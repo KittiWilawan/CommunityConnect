@@ -19,5 +19,5 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export function redirectAfterAuth(role?: string | null) {
-  window.location.assign(getAuthDestination(role));
+  window.location.href = getAuthDestination(role);
 }
