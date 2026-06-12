@@ -27,7 +27,6 @@ export default function DashboardLayout({
   useEffect(() => {
     console.log("ReportIssue Layout state:", { user: user?.email, profile: profile?.display_name });
   }, [user, profile]);
-
   useEffect(() => {
     const loadHeaderData = async () => {
       try {
@@ -114,7 +113,7 @@ export default function DashboardLayout({
               className={`px-4 py-3 rounded-xl text-sm font-semibold transition ${pathname === "/reportissue"
                 ? "bg-blue-50 text-[#3B82F6]"
                 : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"
-              }`}
+                }`}
             >
               {tNav.report}
             </Link>
@@ -124,7 +123,7 @@ export default function DashboardLayout({
               className={`px-4 py-3 rounded-xl text-sm font-semibold transition ${pathname === "/reportissue/historys"
                 ? "bg-blue-50 text-[#3B82F6]"
                 : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"
-              }`}
+                }`}
             >
               {tNav.history}
             </Link>
@@ -134,7 +133,7 @@ export default function DashboardLayout({
               className={`px-4 py-3 rounded-xl text-sm font-semibold transition flex items-center space-x-2 ${pathname === "/reportissue/profile"
                 ? "bg-blue-50 text-[#3B82F6]"
                 : darkMode ? "text-slate-300 hover:bg-slate-700" : "text-slate-600 hover:bg-slate-50"
-              }`}
+                }`}
             >
               <UserIcon className="w-4 h-4" />
               <span>{tNav.profile}</span>
