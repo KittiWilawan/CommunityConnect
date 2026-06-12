@@ -83,7 +83,6 @@ export default function DashboardLayout({
                         Community Connect
                     </Link>
 
-                    {/* Desktop Navigation */}
                     <div className={`hidden md:flex items-center space-x-5 text-sm font-medium ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
                         <Link
                             href="/adminlogin"

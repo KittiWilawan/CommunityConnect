@@ -82,6 +82,7 @@ export default function DashboardLayout({
     history: language === 'th' ? 'ประวัติของฉัน' : 'My History',
     profile: language === 'th' ? 'โปรไฟล์' : 'Profile',
     logout: language === 'th' ? 'ออกจากระบบ' : 'Logout',
+    dashboard: language === 'th' ? 'แดชบอร์ด' : 'Dashboard',
   };
 
 
@@ -155,6 +156,12 @@ export default function DashboardLayout({
 
         {mobileMenuOpen && (
           <div className={`md:hidden border-b shadow-lg absolute top-16 left-0 right-0 z-20 flex flex-col px-6 py-4 space-y-4 animate-[slideDown_200ms_ease-out] ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <Link
+              href="/adminlogin"
+              className={`transition ${pathname === '/adminlogin' ? 'text-[#3B82F6] font-semibold' : darkMode ? 'hover:text-white' : 'hover:text-slate-900'}`}
+            >
+              Admin Login
+            </Link>
             <Link
               href="/reportissue"
               onClick={() => setMobileMenuOpen(false)}

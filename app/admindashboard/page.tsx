@@ -41,7 +41,6 @@ export default function DashboardPage() {
   const [completionImage, setCompletionImage] = useState<string | null>(null);
   const [savingCompletion, setSavingCompletion] = useState(false);
   const completionFileRef = useRef<HTMLInputElement>(null);
-  const [mapExpanded, setMapExpanded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [activePinIndex, setActivePinIndex] = useState<number>(0);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -482,16 +481,13 @@ export default function DashboardPage() {
         {/* Map Section */}
         {mapReports.length > 0 && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            {/* Map header with navigation controls */}
             <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
               <div>
                 <h2 className="text-base font-bold text-[#0F172A]">{t.mapTitle}</h2>
                 <p className="text-xs text-slate-400 mt-0.5">{t.mapDesc}</p>
               </div>
 
-              {/* Pin navigation controls */}
               <div className="flex items-center gap-2 shrink-0">
-                {/* Current pin info */}
                 {mapReports.length > 0 && (
                   <div className="hidden sm:flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
                     <span
@@ -507,7 +503,6 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* Left button */}
                 <button
                   onClick={() => {
                     const newIndex = (activePinIndex - 1 + mapReports.length) % mapReports.length;
@@ -520,7 +515,6 @@ export default function DashboardPage() {
                   <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                {/* Pin counter (mobile) */}
                 <span className="sm:hidden text-xs font-bold text-slate-500">
                   {activePinIndex + 1}/{mapReports.length}
                 </span>
@@ -539,21 +533,13 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              <button
-                onClick={() => setMapExpanded((prev) => !prev)}
-                title={mapExpanded ? (language === "th" ? "ย่อแผนที่" : "Collapse map") : (language === "th" ? "ขยายแผนที่" : "Expand map")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold transition active:scale-95 cursor-pointer shrink-0"
-              >
-                {mapExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                <span className="hidden sm:inline">{mapExpanded ? (language === "th" ? "ย่อ" : "Collapse") : (language === "th" ? "ขยาย" : "Expand")}</span>
-              </button>
+
             </div>
 
             {/* Map */}
             <IncidentStatusMap
               reports={mapReports}
               language={language}
-              heightClass={mapExpanded ? "h-[500px]" : "h-64"}
               activeReportId={mapReports[activePinIndex]?.id}
             />
 
