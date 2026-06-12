@@ -21,7 +21,6 @@ const LoginCard = () => {
   const [liffReady, setLiffReady] = useState(false);
   const [liffAutoLogin, setLiffAutoLogin] = useState(false);
 
-  // Initialize LIFF on mount — if running inside LINE, auto-login
   useEffect(() => {
     if (!isLiffConfigured()) return;
 
@@ -33,7 +32,6 @@ const LoginCard = () => {
         if (cancelled) return;
         setLiffReady(true);
 
-        // If running inside LINE in-app browser and user is logged in → auto-login
         if (isInLiffClient() && isLiffLoggedIn()) {
           setLiffAutoLogin(true);
           setLoading(true);
@@ -115,7 +113,6 @@ const LoginCard = () => {
     setError(null);
 
     try {
-      // If LIFF is ready and we're in LINE client, use LIFF login
       if (liffReady && isInLiffClient()) {
         const idToken = getLiffIdToken();
         if (idToken) {
@@ -134,13 +131,11 @@ const LoginCard = () => {
         }
       }
 
-      // Fallback: use standard Supabase OAuth flow for LINE
       const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "line" as any,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: "profile openid email",
         },
       });
 
@@ -154,7 +149,6 @@ const LoginCard = () => {
     }
   };
 
-  // Show loading screen when LIFF auto-login is in progress
   if (liffAutoLogin) {
     return (
       <div className="bg-white p-10 rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md flex flex-col items-center justify-center min-h-[200px]">
