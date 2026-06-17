@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { X, Image as ImageIcon, Calendar } from "lucide-react";
 
 interface ReportDetailModalProps {
@@ -30,6 +30,13 @@ export default function ReportDetailModal({
   showAdminActions = false,
   onUpdateStatus,
 }: ReportDetailModalProps) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const t = {
     noImage: language === "th" ? "ไม่มีรูปภาพแนบ" : "No image attached",
     statusLabel: language === "th" ? "สถานะการดำเนินงาน" : "Status",
@@ -46,7 +53,7 @@ export default function ReportDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}

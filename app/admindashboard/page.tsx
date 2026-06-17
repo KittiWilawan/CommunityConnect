@@ -240,6 +240,17 @@ export default function DashboardPage() {
     }
   }, [reports]);
 
+  useEffect(() => {
+    if (selectedReportForDetail || completionTargetId || showRejectModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedReportForDetail, completionTargetId, showRejectModal]);
+
   const handleUpdateStatus = async (
     reportId: string,
     newStatus: string,
@@ -877,7 +888,7 @@ export default function DashboardPage() {
 
       {/* Detail Modal */}
       {selectedReportForDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]" onClick={() => setSelectedReportForDetail(null)} />
           <div className="relative bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 z-10 my-auto animate-[scaleUp_250ms_ease-out] flex flex-col md:flex-row gap-6 max-h-[90vh] overflow-y-auto">
             <button onClick={() => setSelectedReportForDetail(null)} className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer">
@@ -1087,7 +1098,7 @@ export default function DashboardPage() {
 
       {/* Completion Evidence Modal */}
       {completionTargetId && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 overflow-y-auto">
           <div
             className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
             onClick={() => {

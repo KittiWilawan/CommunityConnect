@@ -72,6 +72,17 @@ export default function CategoriesPage() {
         fetchCategories();
     }, [fetchCategories]);
 
+    useEffect(() => {
+        if (editingCategory) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [editingCategory]);
+
     // Toggle enabled state
     const toggleService = async (id: string) => {
         const cat = categories.find((c) => c.id === id);
@@ -348,7 +359,7 @@ export default function CategoriesPage() {
 
             {/* Edit Modal */}
             {editingCategory && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+                <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 overflow-y-auto">
                     <div
                         className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
                         onClick={closeEditModal}

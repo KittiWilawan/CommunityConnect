@@ -295,6 +295,17 @@ export default function HistoryContent() {
     }
   };
 
+  useEffect(() => {
+    if (selectedReportForDetail || editingReport) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedReportForDetail, editingReport]);
+
   const openEditModal = (report: Report) => {
     setEditingReport(report);
     setEditDescription(report.description);
@@ -811,7 +822,7 @@ export default function HistoryContent() {
 
       {/* Detail Modal (User-style, but shows the same timeline info as admin) */}
       {selectedReportForDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
           <div
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]"
             onClick={() => setSelectedReportForDetail(null)}
@@ -976,7 +987,7 @@ export default function HistoryContent() {
 
       {/* Edit Modal */}
       {editingReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto">
           <div
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={closeEditModal}
