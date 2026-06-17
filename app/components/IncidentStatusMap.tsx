@@ -79,6 +79,7 @@ export default function IncidentStatusMap({
     () => new Set(REPORT_STATUSES)
   );
   const [filterCollapsed, setFilterCollapsed] = useState(true);
+  const [isInteractive, setIsInteractive] = useState(false);
 
   // 🟢 ดึงข้อมูล Leaflet เข้ามาทำงานใน UseEffect (รันเฉพาะฝั่ง Client แน่นอน 100%)
   useEffect(() => {
@@ -289,9 +290,23 @@ export default function IncidentStatusMap({
   const allActive = activeStatuses.size === REPORT_STATUSES.length;
 
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative ${className}`}
+      onMouseLeave={() => setIsInteractive(false)}
+    >
       <div className={`${heightClass} relative overflow-hidden bg-slate-100`}>
         <div ref={mapContainerRef} className="absolute inset-0 z-0" />
+
+        {!isInteractive && (
+          <div
+            className="absolute inset-0 z-[400] flex items-center justify-center bg-black/5 cursor-pointer hover:bg-black/10 transition-colors"
+            onClick={() => setIsInteractive(true)}
+          >
+            <div className="bg-slate-800/80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-sm pointer-events-none">
+              {language === "th" ? "แตะเพื่อเลื่อนแผนที่" : "Tap to interact"}
+            </div>
+          </div>
+        )}
 
         {locatedReports.length === 0 && (
           <div className="absolute inset-0 z-[300] flex items-center justify-center bg-slate-100/80 backdrop-blur-[1px] pointer-events-none">

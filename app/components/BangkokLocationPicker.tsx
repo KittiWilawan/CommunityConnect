@@ -90,6 +90,7 @@ export default function BangkokLocationPicker({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isInteractive, setIsInteractive] = useState(false);
   onChangeRef.current = onChange;
 
   const t = {
@@ -291,13 +292,27 @@ export default function BangkokLocationPicker({
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative ${className}`}
+      onMouseLeave={() => setIsInteractive(false)}
+    >
       <div
         className={`rounded-2xl h-64 relative overflow-hidden border shadow-inner ${
           darkMode ? "border-slate-600" : "border-slate-200"
         }`}
       >
         <div ref={mapContainerRef} className="absolute inset-0 z-0" />
+
+        {!isInteractive && (
+          <div
+            className="absolute inset-0 z-[350] flex flex-col items-center justify-end pb-6 bg-black/5 cursor-pointer hover:bg-black/10 transition-colors"
+            onClick={() => setIsInteractive(true)}
+          >
+            <div className="bg-slate-800/80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-sm pointer-events-none">
+              {language === "th" ? "แตะเพื่อเลื่อนแผนที่" : "Tap to interact"}
+            </div>
+          </div>
+        )}
 
 
 
