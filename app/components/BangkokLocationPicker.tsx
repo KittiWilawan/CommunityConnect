@@ -90,7 +90,6 @@ export default function BangkokLocationPicker({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [isInteractive, setIsInteractive] = useState(false);
   onChangeRef.current = onChange;
 
   const t = {
@@ -254,7 +253,7 @@ export default function BangkokLocationPicker({
       mapRef.current?.invalidateSize();
     }, 100);
     return () => clearTimeout(timer);
-  }, [isInteractive]);
+  }, []);
 
   const handleCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -292,54 +291,15 @@ export default function BangkokLocationPicker({
   };
 
   return (
-
-    <div className={isInteractive ? "" : `relative ${className}`}>
+    <div className={`relative ${className}`}>
       <div
-        className={
-          isInteractive
-            ? `fixed inset-0 z-[9999] bg-slate-100 flex flex-col`
-            : `rounded-2xl h-64 relative overflow-hidden border shadow-inner ${
-                darkMode ? "border-slate-600" : "border-slate-200"
-              }`
-        }
+        className={`rounded-2xl h-64 relative overflow-hidden border shadow-inner ${
+          darkMode ? "border-slate-600" : "border-slate-200"
+        }`}
       >
         <div ref={mapContainerRef} className="absolute inset-0 z-0" />
 
-        {/* Interactive Overlay */}
-        {!isInteractive && (
-          <div
-            className="absolute inset-0 z-[400] flex items-center justify-center bg-slate-900/5 cursor-pointer backdrop-blur-[0.5px] transition-colors hover:bg-slate-900/10"
-            onClick={() => setIsInteractive(true)}
-            title={language === "th" ? "คลิกเพื่อใช้งานแผนที่" : "Click to interact"}
-          >
-            <div className="bg-white/95 backdrop-blur-md text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl font-bold shadow-lg flex items-center gap-2 transform transition-all hover:scale-105 active:scale-95 pointer-events-auto">
-              <svg
-                className="w-4 h-4 text-blue-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-              </svg>
-              {language === "th" ? "คลิกเพื่อใช้งานแผนที่" : "Click to interact with map"}
-            </div>
-          </div>
-        )}
 
-        {/* Lock map button */}
-        {isInteractive && (
-          <button
-            onClick={() => setIsInteractive(false)}
-            className="absolute top-16 right-3 z-[500] bg-white/95 backdrop-blur-sm text-slate-800 border border-slate-200 px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-2 active:scale-95"
-            title={language === "th" ? "ปิดแผนที่" : "Close map"}
-          >
-            <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            {language === "th" ? "ปิดแผนที่" : "Close Map"}
-          </button>
-        )}
 
 
         <div className="absolute inset-0 z-[400] pointer-events-none flex items-center justify-center">
