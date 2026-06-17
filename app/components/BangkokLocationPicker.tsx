@@ -237,6 +237,10 @@ export default function BangkokLocationPicker({
 
     mapRef.current = map;
 
+    map.on('click', () => setIsInteractive(true));
+    map.on('touchstart', () => setIsInteractive(true));
+    map.on('mousedown', () => setIsInteractive(true));
+
     const initial = value
       ? { lat: value.latitude, lng: value.longitude }
       : BANGKOK_CENTER;
@@ -310,8 +314,6 @@ export default function BangkokLocationPicker({
     <div 
       className={`relative ${className}`}
       onMouseLeave={() => setIsInteractive(false)}
-      onClick={() => setIsInteractive(true)}
-      onTouchStart={() => setIsInteractive(true)}
     >
       <div
         className={`rounded-2xl h-64 relative overflow-hidden border shadow-inner ${

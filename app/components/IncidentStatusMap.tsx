@@ -239,6 +239,10 @@ export default function IncidentStatusMap({
     markersLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
+    map.on('click', () => setIsInteractive(true));
+    map.on('touchstart', () => setIsInteractive(true));
+    map.on('mousedown', () => setIsInteractive(true));
+
     return () => {
       map.remove();
       mapRef.current = null;
@@ -307,8 +311,6 @@ export default function IncidentStatusMap({
     <div 
       className={`relative ${className}`}
       onMouseLeave={() => setIsInteractive(false)}
-      onClick={() => setIsInteractive(true)}
-      onTouchStart={() => setIsInteractive(true)}
     >
       <div className={`${heightClass} relative overflow-hidden bg-slate-100`}>
         <div ref={mapContainerRef} className="absolute inset-0 z-0" />
