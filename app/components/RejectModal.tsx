@@ -23,7 +23,7 @@ export default function RejectModal({
 
     const handleSubmit = async () => {
         if (!rejectionReason.trim()) {
-            alert(language === "th" ? "กรุณากรอกหมายเหตุการปฎิเสธ" : "Please enter rejection reason");
+            alert(language === "th" ? "กรุณากรอกหมายเหตุการปฏิเสธ" : "Please enter rejection reason");
             return;
         }
 
@@ -57,11 +57,11 @@ export default function RejectModal({
                 </button>
 
                 <h2 className="text-xl font-bold text-red-600 mb-2">
-                    {language === "th" ? "ปฎิเสธรายการแจ้งเหตุ" : "Reject Report"}
+                    {language === "th" ? "ปฏิเสธรายการแจ้งเหตุ" : "Reject Report"}
                 </h2>
                 <p className="text-sm text-slate-600 mb-4">
                     {language === "th"
-                        ? "โปรดระบุเหตุผลในการปฎิเสธ"
+                        ? "โปรดระบุเหตุผลในการปฏิเสธ"
                         : "Please specify the reason for rejection"}
                 </p>
 
@@ -69,7 +69,7 @@ export default function RejectModal({
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
                     placeholder={
-                        language === "th" ? "เหตุผลการปฎิเสธ..." : "Reason for rejection..."
+                        language === "th" ? "เหตุผลการปฏิเสธ..." : "Reason for rejection..."
                     }
                     className="w-full p-3 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-red-400 focus:border-red-400 outline-none resize-none"
                     rows={5}
@@ -94,7 +94,7 @@ export default function RejectModal({
                                 ? "กำลังประมวลผล..."
                                 : "Processing..."
                             : language === "th"
-                                ? "ยืนยันปฎิเสธ"
+                                ? "ยืนยันปฏิเสธ"
                                 : "Confirm Reject"}
                     </button>
                 </div>

@@ -863,7 +863,7 @@ export default function HistoryContent() {
                 </div>
               </div>
 
-              {selectedReportForDetail.status === "ปฎิเสธ" && selectedReportForDetail.rejectionReason && (
+              {selectedReportForDetail.status === "ปฏิเสธ" && selectedReportForDetail.rejectionReason && (
                 <div className="p-4 bg-red-50 border border-red-200/60 rounded-2xl">
                   <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
                     {language === "th" ? "เหตุผลที่ถูกปฏิเสธ" : "Rejection reason"}

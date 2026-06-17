@@ -110,7 +110,7 @@ create table if not exists public.reports (
   completed_at timestamp with time zone,
   rejection_reason text,
   rejected_at timestamp with time zone,
-  status text default 'รอดำเนินการ' check (status in ('รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ขอข้อมูลเพิ่ม', 'ปฎิเสธ')),
+  status text default 'รอดำเนินการ' check (status in ('รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ขอข้อมูลเพิ่ม', 'ปฏิเสธ')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

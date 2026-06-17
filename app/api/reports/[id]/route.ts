@@ -113,6 +113,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       existingReport.subcategory || existingReport.category_title || "รายการแจ้งเหตุ";
     const nowIso = new Date().toISOString();
 
+
     // Admin status update: only when the request is explicitly sending "status".
     // This allows an admin who is also the report owner to edit description/contact
     // via the owner-update path (without being forced to send status).
@@ -130,7 +131,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         );
       }
 
-      if (status === "ปฎิเสธ" && !String(rejection_reason || "").trim()) {
+      if (status === "ปฏิเสธ" && !String(rejection_reason || "").trim()) {
         return Response.json(
           { error: "rejection_reason is required when rejecting a report" },
           { status: 400 }
@@ -141,7 +142,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       if (status === "เสร็จสิ้น") {
         updatePayload.completion_image = completion_image;
       }
-      if (status === "ปฎิเสธ") {
+      if (status === "ปฏิเสธ") {
         updatePayload.rejection_reason = String(rejection_reason || "").trim();
         updatePayload.rejected_at = nowIso;
       }
@@ -195,10 +196,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
       if (report?.user_id) {
         const title =
-          status === "ปฎิเสธ" ? "รายการแจ้งเหตุถูกปฎิเสธ" : "อัปเดตสถานะแจ้งเหตุ";
+          status === "ปฏิเสธ" ? "รายการแจ้งเหตุถูกปฏิเสธ" : "อัปเดตสถานะแจ้งเหตุ";
         const content =
-          status === "ปฎิเสธ"
-            ? `รายการ "${reportLabel}" ถูกปฎิเสธ\nเหตุผล: ${String(rejection_reason || "").trim()}`
+          status === "ปฏิเสธ"
+            ? `รายการ "${reportLabel}" ถูกปฏิเสธ\nเหตุผล: ${String(rejection_reason || "").trim()}`
             : `รายการ "${reportLabel}" ถูกเปลี่ยนสถานะเป็น "${status}"`;
 
         const { error: ownerNotifError } = await supabase.from("notifications").insert({
@@ -218,8 +219,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         supabase,
         id,
         "🔄 อัปเดตสถานะรายการแจ้งเหตุ",
-        status === "ปฎิเสธ"
-          ? `รายการ "${reportLabel}" ถูกปฎิเสธ\nจาก: ${existingReport.contact || "ไม่ระบุชื่อ"}\nเหตุผล: ${String(rejection_reason || "").trim()}`
+        status === "ปฏิเสธ"
+          ? `รายการ "${reportLabel}" ถูกปฏิเสธ\nจาก: ${existingReport.contact || "ไม่ระบุชื่อ"}\nเหตุผล: ${String(rejection_reason || "").trim()}`
           : `รายการ "${reportLabel}" ถูกเปลี่ยนสถานะเป็น "${status}"\nจาก: ${existingReport.contact || "ไม่ระบุชื่อ"}`
       );
 

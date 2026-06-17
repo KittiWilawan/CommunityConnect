@@ -3,14 +3,14 @@ export const REPORT_STATUSES = [
   "กำลังดำเนินการ",
   "ขอข้อมูลเพิ่ม",
   "เสร็จสิ้น",
-  "ปฎิเสธ",
+  "ปฏิเสธ",
 ] as const;
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
 export function getStatusColor(status: string): string {
   switch (status) {
-    case "ปฎิเสธ":
+    case "ปฏิเสธ":
       return "#EF4444";
     case "เสร็จสิ้น":
       return "#10B981";
@@ -25,7 +25,7 @@ export function getStatusColor(status: string): string {
 
 export function getStatusClass(status: string): string {
   switch (status) {
-    case "ปฎิเสธ":
+    case "ปฏิเสธ":
       return "bg-red-50 text-red-700 border-red-200/60";
     case "เสร็จสิ้น":
       return "bg-emerald-50 text-emerald-700 border-emerald-200/50";
@@ -49,7 +49,7 @@ export function getStatusLabel(status: string, language: "th" | "en"): string {
       return "Need More Info";
     case "เสร็จสิ้น":
       return "Completed";
-    case "ปฎิเสธ":
+    case "ปฏิเสธ":
       return "Rejected";
     default:
       return status;

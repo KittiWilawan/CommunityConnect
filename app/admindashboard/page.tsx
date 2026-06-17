@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
   const handleRejectReport = async (reportId: string, reason: string) => {
     if (!reportId) {
-      alert(language === "th" ? "ไม่พบรายการที่ต้องการปฎิเสธ" : "Missing report id");
+      alert(language === "th" ? "ไม่พบรายการที่ต้องการปฏิเสธ" : "Missing report id");
       setShowRejectModal(false);
       setRejectingReportId(null);
       return;
@@ -122,7 +122,7 @@ export default function DashboardPage() {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            status: "ปฎิเสธ",
+            status: "ปฏิเสธ",
             rejection_reason: reason,
           }),
           signal: controller.signal,
@@ -135,7 +135,7 @@ export default function DashboardPage() {
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         alert(
-          (language === "th" ? "ไม่สามารถปฎิเสธรายการได้: " : "Failed to reject report: ") +
+          (language === "th" ? "ไม่สามารถปฏิเสธรายการได้: " : "Failed to reject report: ") +
           (body.error || res.statusText)
         );
         return;
@@ -154,7 +154,7 @@ export default function DashboardPage() {
             r.id === reportId
               ? {
                 ...r,
-                status: "ปฎิเสธ",
+                status: "ปฏิเสธ",
                 rejection_reason: reason,
                 rejected_at: new Date().toISOString(),
               }
@@ -170,7 +170,7 @@ export default function DashboardPage() {
             : "Reject request timed out. Please try again."
         );
       } else {
-        alert(language === "th" ? "เกิดข้อผิดพลาดในการปฎิเสธ" : "Error rejecting report");
+        alert(language === "th" ? "เกิดข้อผิดพลาดในการปฏิเสธ" : "Error rejecting report");
       }
     } finally {
       setShowRejectModal(false);
@@ -831,15 +831,15 @@ export default function DashboardPage() {
                               setShowRejectModal(true);
                             }}
                             className="p-1 text-slate-300 hover:text-red-600 transition cursor-pointer ml-0.5"
-                            title={language === "th" ? "ปฎิเสธรายการ" : "Reject"}
+                            title={language === "th" ? "ปฏิเสธรายการ" : "Reject"}
                           >
                             <X className="w-3 h-3" />
                           </button>
-                          {report.status === "ปฎิเสธ" && (
+                          {report.status === "ปฏิเสธ" && (
                             <button
                               onClick={() => handleDeleteReport(report.id)}
                               className="p-1 text-slate-300 hover:text-red-600 transition cursor-pointer ml-0.5"
-                              title={language === "th" ? "ลบรายการที่ถูกปฎิเสธ" : "Delete rejected report"}
+                              title={language === "th" ? "ลบรายการที่ถูกปฏิเสธ" : "Delete rejected report"}
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
