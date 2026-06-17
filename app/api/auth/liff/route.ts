@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase-server";
 import { ensureProfile } from "@/app/lib/ensure-profile";
 import { normalizeRole } from "@/app/lib/roles";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,58 +15,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const clientId = process.env.SUPABASE_AUTH_EXTERNAL_LINE_CLIENT_ID;
+    const clientSecret = process.env.SUPABASE_AUTH_EXTERNAL_LINE_SECRET;
 
-    let { data, error } = await supabase.auth.signInWithIdToken({
-      provider: "line" as any,
-      token: idToken,
+    if (!clientId || !clientSecret) {
+      console.warn("Missing LINE credentials in environment");
+      return NextResponse.json({ error: "Server configuration error (Missing LINE credentials)" }, { status: 500 });
+    }
+
+    // 1. Verify ID Token with LINE API
+    // This is required for production security to ensure the token is valid and hasn't been tampered with.
+    const params = new URLSearchParams();
+    params.append('id_token', idToken);
+    params.append('client_id', clientId);
+
+    const verifyRes = await fetch('https://api.line.me/oauth2/v2.1/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
     });
 
-    if (error) {
-      const isLocal = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("localhost") || process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("127.0.0.1");
+    const payload = await verifyRes.json();
 
-      if (isLocal) {
-        console.warn("Falling back to local LINE mock auth because native provider failed.");
-        try {
-          const payloadBase64 = idToken.split(".")[1];
-          const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf8"));
-          const lineId = payload.sub;
-          const email = `${lineId}@line.mock.local`;
-          const password = `line-mock-${lineId}`;
-
-          let mockAuth: any = await supabase.auth.signInWithPassword({ email, password });
-
-          if (mockAuth.error) {
-            mockAuth = await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                data: {
-                  full_name: payload.name,
-                  avatar_url: payload.picture,
-                },
-              },
-            });
-          }
-
-          if (mockAuth.error) throw mockAuth.error;
-          data = mockAuth.data as any;
-          error = null;
-        } catch (mockErr: any) {
-          console.error("Mock auth failed:", mockErr.message);
-          return NextResponse.json({ error: "Local mock auth failed: " + mockErr.message }, { status: 401 });
-        }
-      } else {
-        console.error("LIFF signInWithIdToken error:", error.message);
-        return NextResponse.json({ error: error.message }, { status: 401 });
-      }
+    if (!verifyRes.ok || payload.error) {
+      console.error("LINE verify error:", payload);
+      return NextResponse.json({ error: payload.error_description || "Invalid ID token" }, { status: 401 });
     }
+
+    // 2. Generate deterministic but secure credentials for Supabase
+    // Since Supabase Cloud doesn't support 'line' natively in signInWithIdToken without Custom OIDC (paid),
+    // we use a secure deterministic email/password strategy.
+    const lineId = payload.sub;
+    const email = `${lineId}@line.liff.user`;
+    
+    // Hash the lineId with the server secret to create an unguessable password
+    const password = crypto.createHash('sha256').update(lineId + clientSecret).digest('hex');
+
+    const supabase = await createClient();
+
+    // 3. Attempt Login
+    let authRes: any = await supabase.auth.signInWithPassword({ email, password });
+
+    // 4. If login fails (user doesn't exist), Sign Up
+    if (authRes.error && authRes.error.message.includes("Invalid login credentials")) {
+      authRes = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: payload.name,
+            avatar_url: payload.picture,
+            provider: "line"
+          }
+        }
+      });
+    }
+
+    if (authRes.error) {
+      console.error("Supabase Auth error:", authRes.error.message);
+      return NextResponse.json({ error: authRes.error.message }, { status: 401 });
+    }
+
+    const { data } = authRes;
 
     if (!data?.user || !data?.session) {
-      return NextResponse.json({ error: "No user or session returned (Email confirmation might be required)" }, { status: 401 });
+      return NextResponse.json({ error: "No user or session returned" }, { status: 401 });
     }
 
-    // Ensure profile exists
+    // 5. Ensure profile exists in our public.profiles table
     const profile = await ensureProfile(supabase, data.user);
 
     const role = normalizeRole(
@@ -73,7 +90,8 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json({ role });
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  } catch (err: any) {
+    console.error("LIFF Auth exception:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
