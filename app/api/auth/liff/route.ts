@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
           const email = `${lineId}@line.mock.local`;
           const password = `line-mock-${lineId}`;
 
-          let mockAuth = await supabase.auth.signInWithPassword({ email, password });
+          let mockAuth: any = await supabase.auth.signInWithPassword({ email, password });
 
           if (mockAuth.error) {
             mockAuth = await supabase.auth.signUp({

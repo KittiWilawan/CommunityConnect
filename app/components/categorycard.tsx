@@ -22,7 +22,6 @@ export default function CategoryCard({
   return (
     <button
       onClick={onClick}
-      // ⚡ แก้ไขตรงนี้: ปลดล็อก max-w ออกเพื่อให้ยืดเต็มพื้นที่แต่ละช่อง Grid และชิดกันพอดี
       className={`flex flex-col justify-between p-2.5 sm:p-3 w-full min-h-[120px] sm:min-h-[135px] rounded-2xl border-2 border-dashed text-left transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md 
         ${darkMode
           ? "bg-slate-800/80 text-slate-100 border-opacity-50"
