@@ -1,4 +1,4 @@
-https://community-connect-three-pearl.vercel.app
+Domain https://community-connect-three-pearl.vercel.app
 <br>
 LIFF Link
 https://liff.line.me/2010369514-NTEJovG3
