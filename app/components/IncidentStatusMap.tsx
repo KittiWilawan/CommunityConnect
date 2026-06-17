@@ -223,10 +223,10 @@ export default function IncidentStatusMap({
       minZoom: 11,
       maxZoom: 18,
       maxBounds: LEAFLET_MAX_BOUNDS,
-      maxBoundsViscosity: 1,
-      zoomControl: false,
-      scrollWheelZoom: true,
-      dragging: true,
+      scrollWheelZoom: false,
+      dragging: false,
+      touchZoom: false,
+      doubleClickZoom: false,
     });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -251,11 +251,25 @@ export default function IncidentStatusMap({
   }, [updateMarkers]);
 
   useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (isInteractive) {
+      map.dragging?.enable();
+      map.scrollWheelZoom?.enable();
+      map.touchZoom?.enable();
+      map.doubleClickZoom?.enable();
+    } else {
+      map.dragging?.disable();
+      map.scrollWheelZoom?.disable();
+      map.touchZoom?.disable();
+      map.doubleClickZoom?.disable();
+    }
+    
     const timer = setTimeout(() => {
-      mapRef.current?.invalidateSize();
+      map.invalidateSize();
     }, 100);
     return () => clearTimeout(timer);
-  }, [heightClass]);
+  }, [isInteractive, heightClass]);
 
   useEffect(() => {
     if (!L || !mapRef.current || !activeReportId) return;
@@ -293,16 +307,15 @@ export default function IncidentStatusMap({
     <div 
       className={`relative ${className}`}
       onMouseLeave={() => setIsInteractive(false)}
+      onClick={() => setIsInteractive(true)}
+      onTouchStart={() => setIsInteractive(true)}
     >
       <div className={`${heightClass} relative overflow-hidden bg-slate-100`}>
         <div ref={mapContainerRef} className="absolute inset-0 z-0" />
 
         {!isInteractive && (
-          <div
-            className="absolute inset-0 z-[400] flex items-center justify-center bg-black/5 cursor-pointer hover:bg-black/10 transition-colors"
-            onClick={() => setIsInteractive(true)}
-          >
-            <div className="bg-slate-800/80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-sm pointer-events-none">
+          <div className="absolute inset-0 z-[400] flex items-center justify-center pointer-events-none">
+            <div className="bg-slate-800/80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-sm animate-pulse">
               {language === "th" ? "แตะเพื่อเลื่อนแผนที่" : "Tap to interact"}
             </div>
           </div>

@@ -221,8 +221,10 @@ export default function BangkokLocationPicker({
       maxBounds: LEAFLET_MAX_BOUNDS,
       maxBoundsViscosity: 1,
       zoomControl: false,
-      scrollWheelZoom: true,
-      dragging: true,
+      scrollWheelZoom: false,
+      dragging: false,
+      touchZoom: false,
+      doubleClickZoom: false,
     });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -250,11 +252,24 @@ export default function BangkokLocationPicker({
   }, []);
 
   useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (isInteractive) {
+      map.dragging?.enable();
+      map.scrollWheelZoom?.enable();
+      map.touchZoom?.enable();
+      map.doubleClickZoom?.enable();
+    } else {
+      map.dragging?.disable();
+      map.scrollWheelZoom?.disable();
+      map.touchZoom?.disable();
+      map.doubleClickZoom?.disable();
+    }
     const timer = setTimeout(() => {
-      mapRef.current?.invalidateSize();
+      map.invalidateSize();
     }, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isInteractive]);
 
   const handleCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -295,6 +310,8 @@ export default function BangkokLocationPicker({
     <div 
       className={`relative ${className}`}
       onMouseLeave={() => setIsInteractive(false)}
+      onClick={() => setIsInteractive(true)}
+      onTouchStart={() => setIsInteractive(true)}
     >
       <div
         className={`rounded-2xl h-64 relative overflow-hidden border shadow-inner ${
@@ -304,11 +321,8 @@ export default function BangkokLocationPicker({
         <div ref={mapContainerRef} className="absolute inset-0 z-0" />
 
         {!isInteractive && (
-          <div
-            className="absolute inset-0 z-[350] flex flex-col items-center justify-end pb-6 bg-black/5 cursor-pointer hover:bg-black/10 transition-colors"
-            onClick={() => setIsInteractive(true)}
-          >
-            <div className="bg-slate-800/80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-sm pointer-events-none">
+          <div className="absolute inset-0 z-[350] flex flex-col items-center justify-end pb-6 pointer-events-none">
+            <div className="bg-slate-800/80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-sm backdrop-blur-sm animate-pulse">
               {language === "th" ? "แตะเพื่อเลื่อนแผนที่" : "Tap to interact"}
             </div>
           </div>
